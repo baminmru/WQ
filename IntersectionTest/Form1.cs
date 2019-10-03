@@ -241,8 +241,8 @@ namespace IntersectionTest
 
                 // pass2
                 List<TrackPoint> rawTrack = new List<TrackPoint>();
-                ThreadPool.SetMinThreads(10, 0);
-                ThreadPool.SetMaxThreads(50, 0);
+                ThreadPool.SetMinThreads(50, 0);
+                ThreadPool.SetMaxThreads(200, 0);
                 DirectoryInfo di = new DirectoryInfo(path2save +"\\");
 
                 Total = 0;
@@ -402,6 +402,7 @@ namespace IntersectionTest
             int driveIndex = 0;
             foreach (List<TrackPoint> t in l)
             {
+                Total++;
                 driveIndex++;
                 List<TrackPoint> optTrack;
                 List<string> optimizedTrack = new List<string>();
@@ -474,7 +475,7 @@ namespace IntersectionTest
         private void Timer1_Tick(object sender, EventArgs e)
         {
             lblCnt.Text = "В очереди: " +ACount.ToString() + "\r\n Сделано: " + FinishedCount.ToString();
-           // label1.Text = "Обработано треков: " + Total.ToString();
+            label1.Text = "Обработано поездок: " + Total.ToString();
             if (ACount == 0)
             {
                 cmdCSV.Enabled = true;
