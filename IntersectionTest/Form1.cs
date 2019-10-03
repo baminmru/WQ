@@ -182,8 +182,6 @@ namespace IntersectionTest
                 foreach (string s in it)
                 {
                     string[] cols = s.Split(';');
-                    
-                  
                     if (cols.Length >= 8)
                     {
                         TrackID = cols[0];
@@ -216,22 +214,29 @@ namespace IntersectionTest
                     }
                 }
 
+                label1.Text = "Строк: " + Total.ToString();
+                Application.DoEvents();
+
                 Total = 0;
                 show = 0;
                 foreach (string s in Reorg.Keys)
                 {
                     File.AppendAllLines(path2save + "\\" + s + ".csv", Reorg[s]);
+                    Reorg[s].Clear();
                     Total++;
                     show++;
                     if (show == 100)
                     {
-                        label1.Text = "Треков: " + Total.ToString();
+                        label1.Text = "Записано треков: " + Total.ToString();
                         Application.DoEvents();
                         show = 0;
                     }
                 }
+                Reorg.Clear();
 
 
+                label1.Text = "Записано треков: " + Total.ToString();
+                Application.DoEvents();
 
 
                 // pass2
@@ -252,10 +257,6 @@ namespace IntersectionTest
                     };
                     ACount++;
                     ThreadPool.QueueUserWorkItem(AnalizeTrackQ, a);
-
-                    
-                    
-                   
                 }
 
            
@@ -334,6 +335,7 @@ namespace IntersectionTest
             List<TrackPoint> rawTrack = new List<TrackPoint>();
 
             var trackData = File.ReadLines(a.FileName);
+            DateTime d = DateTime.MinValue;
 
             foreach (string s in trackData)
             {
@@ -346,20 +348,40 @@ namespace IntersectionTest
                     N = Double.Parse(cols[2], ci);
                     E = Double.Parse(cols[3], ci);
                     V = Double.Parse(cols[4], ci);
-                    DateTime d;
-                    try
+                    
+                    if (cols[1].Length == 23)
                     {
-                        d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
+                        try
+                        {
+                            d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
+                        }
+                        catch
+                        {
+                        }
                     }
-                    catch
+                    else
                     {
-
-                        d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
-
+                        try
+                        {
+                            d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
+                        }
+                        catch
+                        {
+                        }
                     }
+                    //try
+                    //{
+                    //    d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
+                    //}
+                    //catch
+                    //{
+
+                    //    d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
+
+                    //}
                     TrackPoint tp = new TrackPoint() { X = N, Y = E, V = V, T = d, M = cols[5] };
                     rawTrack.Add(tp);
-                    Total++;
+                    //Total++;
                 }
             }
 
@@ -452,7 +474,7 @@ namespace IntersectionTest
         private void Timer1_Tick(object sender, EventArgs e)
         {
             lblCnt.Text = "В очереди: " +ACount.ToString() + "\r\n Сделано: " + FinishedCount.ToString();
-            label1.Text = "Обработано треков: " + Total.ToString();
+           // label1.Text = "Обработано треков: " + Total.ToString();
             if (ACount == 0)
             {
                 cmdCSV.Enabled = true;
