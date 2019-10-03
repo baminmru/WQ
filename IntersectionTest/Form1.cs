@@ -97,33 +97,10 @@ namespace IntersectionTest
                 grpParam.Enabled = false;
                 FinishedCount = 0;
                 ACount = 0;
-                FileInfo fi = new FileInfo(opf.FileName);
+                int show = 0;
+                   CultureInfo ci = new CultureInfo("en-US");
 
-                String path2save = fi.DirectoryName;
-                path2save += "\\Tracks";
-                if (!Directory.Exists(path2save))
-                {
-                    try { Directory.CreateDirectory(path2save); }
-                    catch { }
-                }
-
-                if (!Directory.Exists(path2save +"\\opt"))
-                {
-                    try { Directory.CreateDirectory(path2save+"\\opt"); }
-                    catch { }
-                }
-
-                if (!Directory.Exists(path2save + "\\GeoJSON"))
-                {
-                    try { Directory.CreateDirectory(path2save + "\\GeoJSON"); }
-                    catch { }
-                }
-
-                var it = File.ReadLines(fi.FullName);
-
-         
-                CultureInfo ci = new CultureInfo("en-US");
-               
+                // get parameters
                 try
                 {
                     MinV = Double.Parse(txtMinV.Text);
@@ -151,110 +128,137 @@ namespace IntersectionTest
                     StopTime = 5;
                 }
 
+                FileInfo fi = new FileInfo(opf.FileName);
 
+                String path2save = fi.DirectoryName;
+                path2save += "\\Tracks";
+
+
+                // clean directory
+                if (Directory.Exists(path2save))
+                {
+                    try { Directory.Delete(path2save ,true); }
+                    catch { }
+                }
+
+                while (Directory.Exists(path2save))
+                {
+                    label1.Text = " Удвление файлов " + DateTime.Now;
+                    Application.DoEvents();
+                   
+                }
+
+
+                // create directoies
+                if (!Directory.Exists(path2save))
+                {
+                    try { Directory.CreateDirectory(path2save); }
+                    catch { }
+                }
+
+                if (!Directory.Exists(path2save +"\\opt"))
+                {
+                    try { Directory.CreateDirectory(path2save+"\\opt"); }
+                    catch { }
+                }
+
+                if (!Directory.Exists(path2save + "\\GeoJSON"))
+                {
+                    try { Directory.CreateDirectory(path2save + "\\GeoJSON"); }
+                    catch { }
+                }
+
+
+                // read raw file and split to individual tracks
+                var it = File.ReadLines(fi.FullName);
 
                 string TrackID = "";
-                
-                List<string> oneTrack = new List<string>();
-               
-             
-                string sNE;
+                             string sNE;
                 Double N = 0.0, E = 0.0, V = 0.0;
-                List<TrackPoint> rawTrack = new List<TrackPoint>();
-                ThreadPool.SetMinThreads(10, 0);
-                ThreadPool.SetMaxThreads(50, 0);
-                timer1.Enabled = true;
 
+
+                Dictionary<string, List<string>> Reorg = new Dictionary<string, List<string>>();
+                // pass 1
                 foreach (string s in it)
                 {
-                    
-
                     string[] cols = s.Split(';');
                     
                   
                     if (cols.Length >= 8)
                     {
-
+                        TrackID = cols[0];
                         N = Double.Parse(cols[4], ci);
                         E = Double.Parse(cols[5], ci);
                         V = Double.Parse(cols[6], ci);
                         N = N * 180 / Math.PI;
                         E = E * 180 / Math.PI;
 
-                        sNE = cols[0] + ";" + cols[3] + ";" + N.ToString(ci) + ";" + E.ToString(ci) + ";" + cols[6] + ";" + cols[7];
+                        sNE = cols[0] + ";" + cols[3] + ";" + N.ToString(ci) + ";" + E.ToString(ci) + ";" + cols[6] + ";" + cols[7] ;
 
-                        
-                        if ( TrackID != cols[0])
+                        if (Reorg.ContainsKey(TrackID))
                         {
-
-                            if (oneTrack.Count > 1)
-                            {
-                                File.WriteAllLines(path2save + "\\" + TrackID + ".csv", oneTrack);
-                                {
-                                    List<TrackPoint> Track = new List<TrackPoint>();
-                                    rawTrack.ForEach((item) =>
-                                    {
-                                        Track.Add(new TrackPoint(item));
-                                    });
-
-                                    AState a = new AState() {
-                                    Track=Track,
-                                    TrackID=TrackID,
-                                    SavePath=path2save};
-                                    ACount++;
-                                    ThreadPool.QueueUserWorkItem(AnalizeTrackQ,a);
-
-                                    
-                                }
-                            }
-
-                            TrackID = cols[0];
-
-                            oneTrack.Clear();
-                            oneTrack.Add(header);
-                            rawTrack.Clear();
+                            Reorg[TrackID].Add(sNE);
                         }
-
-                        if (TrackID == cols[0])
+                        else
                         {
-                            //if (V > MinV)
-                            {
-
-                                TrackPoint tp = new TrackPoint() { X = N, Y = E, V = V, T = DateTime.ParseExact(cols[3], "yyyy-MM-dd HH:mm:ss", ci), M = cols[7] };
-                                oneTrack.Add(sNE);
-                                rawTrack.Add(tp);
-                               
-                            }
-
+                            List<string> newList = new List<string>();
+                            newList.Add(sNE);
+                            Reorg.Add(TrackID, newList);
                         }
-                        Application.DoEvents();
-                        Total++;
-                      
                     }
-                  
-
-                }
-
-                // write last Track
-                if (oneTrack.Count > 1) {
-                    File.WriteAllLines(path2save + "\\" + TrackID + ".csv", oneTrack);
+                    Total++;
+                    show++;
+                    if (show == 500)
                     {
-                        List<TrackPoint> Track = new List<TrackPoint>();
-                        rawTrack.ForEach((item) =>
-                        {
-                            Track.Add(new TrackPoint(item));
-                        });
-                        AState a = new AState()
-                        {
-                            Track = Track,
-                            TrackID = TrackID,
-                            SavePath = path2save
-                        };
-                        ACount++;
-                        ThreadPool.QueueUserWorkItem(AnalizeTrackQ, a);
+                        label1.Text = "Строк: " + Total.ToString();
+                        Application.DoEvents();
+                        show = 0;
                     }
-
                 }
+
+                Total = 0;
+                show = 0;
+                foreach (string s in Reorg.Keys)
+                {
+                    File.AppendAllLines(path2save + "\\" + s + ".csv", Reorg[s]);
+                    Total++;
+                    show++;
+                    if (show == 100)
+                    {
+                        label1.Text = "Треков: " + Total.ToString();
+                        Application.DoEvents();
+                        show = 0;
+                    }
+                }
+
+
+
+
+                // pass2
+                List<TrackPoint> rawTrack = new List<TrackPoint>();
+                ThreadPool.SetMinThreads(10, 0);
+                ThreadPool.SetMaxThreads(50, 0);
+                DirectoryInfo di = new DirectoryInfo(path2save +"\\");
+
+                Total = 0;
+                foreach (FileInfo tFile in di.GetFiles("*.csv"))
+                {
+                    timer1.Enabled = true;
+
+                    AState a = new AState()
+                    {
+                        FileName = tFile.FullName,
+                        SavePath = path2save
+                    };
+                    ACount++;
+                    ThreadPool.QueueUserWorkItem(AnalizeTrackQ, a);
+
+                    
+                    
+                   
+                }
+
+           
 
             }
         }
@@ -322,9 +326,44 @@ namespace IntersectionTest
 
         private static void AnalizeTrackQ(object state)
         {
+            string TrackID = "";
+            Double N = 0.0, E = 0.0, V = 0.0;
+            CultureInfo ci = new CultureInfo("en-US");
+
             AState a = (AState)state;
-            AnalizeTrack(a.Track, a.TrackID, a.SavePath);
-            a.Track.Clear();
+            List<TrackPoint> rawTrack = new List<TrackPoint>();
+
+            var trackData = File.ReadLines(a.FileName);
+
+            foreach (string s in trackData)
+            {
+                string[] cols = s.Split(';');
+
+
+                if (cols.Length >= 6)
+                {
+                    TrackID = cols[0];
+                    N = Double.Parse(cols[2], ci);
+                    E = Double.Parse(cols[3], ci);
+                    V = Double.Parse(cols[4], ci);
+                    DateTime d;
+                    try
+                    {
+                        d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
+                    }
+                    catch
+                    {
+
+                        d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
+
+                    }
+                    TrackPoint tp = new TrackPoint() { X = N, Y = E, V = V, T = d, M = cols[5] };
+                    rawTrack.Add(tp);
+                    Total++;
+                }
+            }
+
+            AnalizeTrack(rawTrack, TrackID, a.SavePath);
             ACount--;
             FinishedCount++;
         }
@@ -377,7 +416,10 @@ namespace IntersectionTest
                 }
 
                 string j = JsonConvert.SerializeObject(fc);
-                File.WriteAllText(path2save + "\\GeoJSON\\" + TrackID + "." + driveIndex.ToString() + ".json", j);
+                lock (jsonLocker)
+                {
+                    File.WriteAllText(path2save + "\\GeoJSON\\" + TrackID + "." + driveIndex.ToString() + ".json", j);
+                }
 
 
 
@@ -410,7 +452,7 @@ namespace IntersectionTest
         private void Timer1_Tick(object sender, EventArgs e)
         {
             lblCnt.Text = "В очереди: " +ACount.ToString() + "\r\n Сделано: " + FinishedCount.ToString();
-            label1.Text = "ОБработано строк: " + Total.ToString();
+            label1.Text = "Обработано треков: " + Total.ToString();
             if (ACount == 0)
             {
                 cmdCSV.Enabled = true;

@@ -174,44 +174,44 @@ namespace IntersectionTest
             //        ProjNet.CoordinateSystems.ProjectedCoordinateSystem.WebMercator);
 
 
-            Random rndGen = new Random();
-            Collection<IGeometry> geometry = new Collection<IGeometry>();
+            //Random rndGen = new Random();
+            //Collection<IGeometry> geometry = new Collection<IGeometry>();
 
-            VectorLayer layer = new VectorLayer(String.Empty);
-            var gf = new GeometryFactory();
-            switch (rndGen.Next(3))
-            {
-                case 0:
-                    {
-                        GeneratePoints(gf, geometry, rndGen);
-                        KeyValuePair<string, Bitmap> symbolEntry = getSymbolEntry(rndGen.Next(_symbolTable.Count));
-                        layer.Style.Symbol = symbolEntry.Value;
-                        layer.LayerName = symbolEntry.Key;
-                    }
-                    break;
-                case 1:
-                    {
-                        GenerateLines(gf, geometry, rndGen);
-                        KeyValuePair<string, Color> colorEntry = getColorEntry(rndGen.Next(_colorTable.Count));
-                        layer.Style.Line = new Pen(colorEntry.Value);
-                        layer.LayerName = String.Format("{0} lines", colorEntry.Key);
-                    }
-                    break;
-                //case 2:
-                //    {
-                //        GeneratePolygons(gf, geometry, rndGen);
-                //        KeyValuePair<string, Color> colorEntry = getColorEntry(rndGen.Next(_colorTable.Count));
-                //        layer.Style.Fill = new SolidBrush(colorEntry.Value);
-                //        layer.LayerName = String.Format("{0} squares", colorEntry.Key);
-                //    }
-                //    break;
-                default:
-                    throw new NotSupportedException();
-            }
+            //VectorLayer layer = new VectorLayer(String.Empty);
+            //var gf = new GeometryFactory();
+            //switch (rndGen.Next(3))
+            //{
+            //    case 0:
+            //        {
+            //            GeneratePoints(gf, geometry, rndGen);
+            //            KeyValuePair<string, Bitmap> symbolEntry = getSymbolEntry(rndGen.Next(_symbolTable.Count));
+            //            layer.Style.Symbol = symbolEntry.Value;
+            //            layer.LayerName = symbolEntry.Key;
+            //        }
+            //        break;
+            //    case 1:
+            //        {
+            //            GenerateLines(gf, geometry, rndGen);
+            //            KeyValuePair<string, Color> colorEntry = getColorEntry(rndGen.Next(_colorTable.Count));
+            //            layer.Style.Line = new Pen(colorEntry.Value);
+            //            layer.LayerName = String.Format("{0} lines", colorEntry.Key);
+            //        }
+            //        break;
+            //    //case 2:
+            //    //    {
+            //    //        GeneratePolygons(gf, geometry, rndGen);
+            //    //        KeyValuePair<string, Color> colorEntry = getColorEntry(rndGen.Next(_colorTable.Count));
+            //    //        layer.Style.Fill = new SolidBrush(colorEntry.Value);
+            //    //        layer.LayerName = String.Format("{0} squares", colorEntry.Key);
+            //    //    }
+            //    //    break;
+            //    default:
+            //        throw new NotSupportedException();
+            //}
 
-            var provider = new GeometryProvider(geometry);
-            layer.DataSource = provider;
-            this.mapBox1.Map.Layers.Add(layer);
+            //var provider = new GeometryProvider(geometry);
+            //layer.DataSource = provider;
+            //this.mapBox1.Map.Layers.Add(layer);
         }
     }
 }

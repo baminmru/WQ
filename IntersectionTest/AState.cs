@@ -8,8 +8,9 @@ namespace IntersectionTest
 {
     public class AState
     {
-        public List<TrackPoint> Track { get; set; }
-        public string TrackID { get; set; }
+
+        public string FileName { get; set; }
+
         public string SavePath { get; set; }
     }
 }

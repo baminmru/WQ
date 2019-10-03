@@ -60,10 +60,9 @@
             // label1
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(529, 9);
+            this.label1.Location = new System.Drawing.Point(453, 9);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(0, 13);
+            this.label1.Size = new System.Drawing.Size(134, 90);
             this.label1.TabIndex = 1;
             // 
             // cmdCSV
@@ -183,7 +182,6 @@
             this.grpParam.ResumeLayout(false);
             this.grpParam.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
