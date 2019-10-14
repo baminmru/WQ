@@ -11,12 +11,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GeoAPI.Geometries;
+using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
 using GeoAPI.CoordinateSystems.Transformations;
 using SharpMap.Forms;
 using SharpMap.Layers;
 using SharpMap.Styles;
+using System.IO;
+using System.Drawing.Drawing2D;
+using System.Globalization;
 
 
 using ProjNet.CoordinateSystems.Transformations;
@@ -85,27 +89,168 @@ namespace IntersectionTest
 
         private void FrmMap_Load(object sender, EventArgs e)
         {
-            SharpMap.Layers.TileAsyncLayer osmLayer = new SharpMap.Layers.TileAsyncLayer(BruTile.Predefined.KnownTileSources.Create(BruTile.Predefined.KnownTileSource.OpenStreetMap),
-               "TileLayer - OSM");
+
+
             this.mapBox1.Map.BackgroundLayer.Clear();
-            this.mapBox1.Map.BackgroundLayer.Add(osmLayer);
+
+            var gss = new NtsGeometryServices();
+            var css = new SharpMap.CoordinateSystems.CoordinateSystemServices(
+                new CoordinateSystemFactory(),
+                new CoordinateTransformationFactory(),
+                SharpMap.Converters.WellKnownText.SpatialReference.GetAllReferenceSystems());
+
+            GeoAPI.GeometryServiceProvider.Instance = gss;
+            SharpMap.Session.Instance
+                .SetGeometryServices(gss)
+                .SetCoordinateSystemServices(css)
+                .SetCoordinateSystemRepository(css);
 
             GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 3857);
 
             IMathTransform mathTransform = Wgs84toGoogleMercator.MathTransform;
+
+
+            SharpMap.Layers.TileAsyncLayer osmLayer = new SharpMap.Layers.TileAsyncLayer(BruTile.Predefined.KnownTileSources.Create(BruTile.Predefined.KnownTileSource.OpenStreetMap),
+        "TileLayer - OSM");
+            
+            this.mapBox1.Map.BackgroundLayer.Add(osmLayer);
+
+
             Envelope geom = GeometryTransform.TransformBox(
                 new Envelope(28, 31, 58, 61),
                 mathTransform);
 
-            ////Adds a pushpin layer
-            //VectorLayer pushPinLayer = new VectorLayer("PushPins");
-            //List<IGeometry> geos = new List<IGeometry>();
-            //geos.Add(gf.CreatePoint(geom.Centre));
-            //GeometryProvider geoProvider = new GeometryProvider(geos);
-            //pushPinLayer.DataSource = geoProvider;
-            ////this.mapBox1.Map.Layers.Add(pushPinLayer);
 
-           
+
+            /*
+
+
+            ProjNet.CoordinateSystems.CoordinateSystemFactory csFact = new ProjNet.CoordinateSystems.CoordinateSystemFactory();
+
+        string wkt_gk = "PROJCS[\"DHDN / 3-degree Gauss zone 3 (deprecated)\",GEOGCS[\"DHDN\",DATUM[\"Deutsches_Hauptdreiecksnetz\",SPHEROID[\"Bessel 1841\",6377397.155,299.1528128,AUTHORITY[\"EPSG\",\"7004\"]],AUTHORITY[\"EPSG\",\"6314\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4314\"]],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",9],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",3500000],PARAMETER[\"false_northing\",0],AUTHORITY[\"EPSG\",\"31463\"],AXIS[\"X\",EAST],AXIS[\"Y\",NORTH]]";
+
+        GeoAPI.CoordinateSystems.ICoordinateSystem gauss_krueger_3 = csFact.CreateFromWkt(wkt_gk);
+
+        GeoAPI.CoordinateSystems.ICoordinateSystem webmercator = ProjNet.CoordinateSystems.ProjectedCoordinateSystem.WebMercator;
+
+        ProjNet.CoordinateSystems.Transformations.CoordinateTransformationFactory ctFact = new ProjNet.CoordinateSystems.Transformations.CoordinateTransformationFactory();
+
+        layer.CoordinateTransformation = ctFact.CreateFromCoordinateSystems(gauss_krueger_3, webmercator);
+        layer.ReverseCoordinateTransformation = ctFact.CreateFromCoordinateSystems(webmercator, gauss_krueger_3);
+
+    */
+
+
+            ProjNet.CoordinateSystems.CoordinateSystemFactory csFact = new ProjNet.CoordinateSystems.CoordinateSystemFactory();
+
+            string wkt_gk = @"PROJCS[""KGA"",GEOGCS[""GCS_Pulkovo_1942"",DATUM[""D_Pulkovo_1942"",SPHEROID[""Krasovsky_1940"",6378245.0,298.3]],PRIMEM[""Greenwich"",0.0],UNIT[""Degree"",0.0174532925199433]],PROJECTION[""Transverse_Mercator""],PARAMETER[""False_Easting"",96065.591],PARAMETER[""False_Northing"",-6552809.659],PARAMETER[""Central_Meridian"",30.0],PARAMETER[""Scale_Factor"",1.0],PARAMETER[""Latitude_Of_Origin"",0.0],UNIT[""Meter"",1.0]]";
+
+            GeoAPI.CoordinateSystems.ICoordinateSystem kga = csFact.CreateFromWkt(wkt_gk);
+
+            GeoAPI.CoordinateSystems.ICoordinateSystem webmercator = ProjNet.CoordinateSystems.ProjectedCoordinateSystem.WebMercator;
+
+            GeoAPI.CoordinateSystems.IGeographicCoordinateSystem wgs84 = csFact.CreateGeographicCoordinateSystem(
+                     "WGS 84", AngularUnit.Degrees, HorizontalDatum.WGS84, PrimeMeridian.Greenwich,
+                     new AxisInfo("north", AxisOrientationEnum.North), new AxisInfo("east", AxisOrientationEnum.East));
+
+            ProjNet.CoordinateSystems.Transformations.CoordinateTransformationFactory ctFact = new ProjNet.CoordinateSystems.Transformations.CoordinateTransformationFactory();
+
+            
+
+
+            //Application.StartupPath
+            VectorLayer streets = (VectorLayer)CreateLayer(Application.StartupPath+"/UDS/gr.shp", new VectorStyle { Line = new Pen(Color.Red) });
+
+
+            VectorLayer kad = (VectorLayer)CreateLayer(Application.StartupPath + "/UDS/gr_KAD_ZSD.shp", new VectorStyle { Line = new Pen(Color.OrangeRed) });
+
+            streets.CoordinateTransformation = ctFact.CreateFromCoordinateSystems(kga, webmercator);
+            streets.ReverseCoordinateTransformation = ctFact.CreateFromCoordinateSystems(webmercator, kga);
+
+            kad.CoordinateTransformation = ctFact.CreateFromCoordinateSystems(kga, webmercator);
+            kad.ReverseCoordinateTransformation = ctFact.CreateFromCoordinateSystems(webmercator, kga);
+
+
+            //var kga2wgs84 =ctFact.CreateFromCoordinateSystems(kga, wgs84);
+
+            //     SharpMap.Data.Providers.ShapeFile provider = (SharpMap.Data.Providers.ShapeFile)kad.DataSource;
+
+            //     int fc = provider.GetFeatureCount();
+            //     StringBuilder sb = new StringBuilder();
+
+
+
+            //     for (uint i = 0; i < fc; i++)
+            //     {
+            //string s = @"INSERT INTO UDS ([OBJECT_ID] ,[FID_GRAPH] ,[NAME] ,[UTOCH] ,[NAME_SHORT] ,[TITUL] ,[BBOX] ,[DATA]) VALUES (";
+
+            //        FeatureDataRow fdr = provider.GetFeature(i);
+
+            //         s = s + fdr["OBJECT_ID"].ToString();
+            //         s = s + ","+ fdr["FID_GRAPH"].ToString();
+            //    s = s + ",'" + fdr["NAME2"].ToString() +"'";
+            //    s = s + ",'" + fdr["UTOCH"].ToString() + "'";
+            //    s = s + ",'" + fdr["NAME_SHORT"].ToString() + "'";
+            //    s = s + ",'" + fdr["TITUL"].ToString() + "'";
+
+
+
+
+
+            //         //foreach (DataColumn dc in fdr.Table.Columns)
+            //         //{
+            //         //    System.Diagnostics.Debug.Print(dc.ColumnName);
+            //         //    System.Diagnostics.Debug.Print(fdr[dc.ColumnName].ToString());
+            //         //}
+
+            //         IGeometry g = fdr.Geometry;
+            //         //System.Diagnostics.Debug.Print(g.GeometryType + ":");
+
+            //         CultureInfo ci = new CultureInfo("en-US");
+            //         string b;
+            //         b = "'MULTIPOINT(";
+            //         bool isFirst = true;
+            //         foreach (GeoPoint gp in g.Boundary.Coordinates)
+            //         {
+            //             GeoPoint gpt = kga2wgs84.MathTransform.Transform(gp);
+            //             if (!isFirst)
+            //                 b += ",";
+            //             b += "(" + gpt.X.ToString("0.0000000000", ci) +" " + gpt.Y.ToString("0.0000000000", ci) +")";
+            //             isFirst = false;
+
+            //         }
+            //         b += ")'";
+            //         s = s + "," + b;
+
+
+
+            //         string l;
+            //         l = "'LINESTRING(";
+            //         isFirst = true;
+            //         foreach (GeoPoint gp in g.Coordinates)
+            //         {
+            //             GeoPoint gpt = kga2wgs84.MathTransform.Transform(gp);
+            //             if (!isFirst)
+            //                 l += ",";
+            //             l +=  gpt.X.ToString("0.0000000000", ci) + " " + gpt.Y.ToString("0.0000000000", ci) ;
+            //             isFirst = false;
+
+            //         }
+            //         l += ")'";
+            //         s = s + "," + l;
+
+            //         s = s + ");";
+            //     sb.AppendLine(s);
+            //     }
+
+            //     File.WriteAllText(Application.StartupPath + "/UDS/kad.sql", sb.ToString());
+
+            SaveLayer( "kad",kad);
+            SaveLayer("uds", streets);
+
+
+            this.mapBox1.Map.Layers.Add(streets);
+            this.mapBox1.Map.Layers.Add(kad);
 
             this.mapBox1.Map.ZoomToBox(geom);
             
@@ -119,6 +264,118 @@ namespace IntersectionTest
 
 
 
+        }
+
+
+        private void SaveLayer(string name, VectorLayer vl)
+        {
+
+
+            ProjNet.CoordinateSystems.CoordinateSystemFactory csFact = new ProjNet.CoordinateSystems.CoordinateSystemFactory();
+
+            string wkt_gk = @"PROJCS[""KGA"",GEOGCS[""GCS_Pulkovo_1942"",DATUM[""D_Pulkovo_1942"",SPHEROID[""Krasovsky_1940"",6378245.0,298.3]],PRIMEM[""Greenwich"",0.0],UNIT[""Degree"",0.0174532925199433]],PROJECTION[""Transverse_Mercator""],PARAMETER[""False_Easting"",96065.591],PARAMETER[""False_Northing"",-6552809.659],PARAMETER[""Central_Meridian"",30.0],PARAMETER[""Scale_Factor"",1.0],PARAMETER[""Latitude_Of_Origin"",0.0],UNIT[""Meter"",1.0]]";
+
+            GeoAPI.CoordinateSystems.ICoordinateSystem kga = csFact.CreateFromWkt(wkt_gk);
+            GeoAPI.CoordinateSystems.IGeographicCoordinateSystem wgs84 = csFact.CreateGeographicCoordinateSystem(
+                    "WGS 84", AngularUnit.Degrees, HorizontalDatum.WGS84, PrimeMeridian.Greenwich,
+                    new AxisInfo("north", AxisOrientationEnum.North), new AxisInfo("east", AxisOrientationEnum.East));
+
+            ProjNet.CoordinateSystems.Transformations.CoordinateTransformationFactory ctFact = new ProjNet.CoordinateSystems.Transformations.CoordinateTransformationFactory();
+
+
+
+            var kga2wgs84 = ctFact.CreateFromCoordinateSystems(kga, wgs84);
+
+            SharpMap.Data.Providers.ShapeFile provider = (SharpMap.Data.Providers.ShapeFile)vl.DataSource;
+
+            int fc = provider.GetFeatureCount();
+            StringBuilder sb = new StringBuilder();
+
+
+
+            for (uint i = 0; i < fc; i++)
+            {
+                string s = @"INSERT INTO UDS ([OBJECT_ID] ,[FID_GRAPH] ,[NAME] ,[UTOCH] ,[NAME_SHORT] ,[TITUL] ,[BBOX] ,[DATA]) VALUES (";
+
+                FeatureDataRow fdr = provider.GetFeature(i);
+
+                s = s + fdr["OBJECT_ID"].ToString();
+                s = s + "," + fdr["FID_GRAPH"].ToString();
+                s = s + ",'" + fdr["NAME2"].ToString() + "'";
+                s = s + ",'" + fdr["UTOCH"].ToString() + "'";
+                s = s + ",'" + fdr["NAME_SHORT"].ToString() + "'";
+                s = s + ",'" + fdr["TITUL"].ToString() + "'";
+
+
+
+
+
+                //foreach (DataColumn dc in fdr.Table.Columns)
+                //{
+                //    System.Diagnostics.Debug.Print(dc.ColumnName);
+                //    System.Diagnostics.Debug.Print(fdr[dc.ColumnName].ToString());
+                //}
+
+                IGeometry g = fdr.Geometry;
+                //System.Diagnostics.Debug.Print(g.GeometryType + ":");
+
+                CultureInfo ci = new CultureInfo("en-US");
+                string b;
+                b = "'MULTIPOINT(";
+                bool isFirst = true;
+                foreach (GeoPoint gp in g.Boundary.Coordinates)
+                {
+                    GeoPoint gpt = kga2wgs84.MathTransform.Transform(gp);
+                    if (!isFirst)
+                        b += ",";
+                    b += "(" + gpt.X.ToString("0.0000000000", ci) + " " + gpt.Y.ToString("0.0000000000", ci) + ")";
+                    isFirst = false;
+
+                }
+                b += ")'";
+                s = s + "," + b;
+
+
+
+                string l;
+                l = "'LINESTRING(";
+                isFirst = true;
+                foreach (GeoPoint gp in g.Coordinates)
+                {
+                    GeoPoint gpt = kga2wgs84.MathTransform.Transform(gp);
+                    if (!isFirst)
+                        l += ",";
+                    l += gpt.X.ToString("0.0000000000", ci) + " " + gpt.Y.ToString("0.0000000000", ci);
+                    isFirst = false;
+
+                }
+                l += ")'";
+                s = s + "," + l;
+
+                s = s + ");";
+                sb.AppendLine(s);
+            }
+
+            File.WriteAllText(Application.StartupPath + "/UDS/"+name+".sql", sb.ToString());
+        }
+
+        private static ILayer CreateLayer(string path, VectorStyle style)
+        {
+            FileInfo file = new FileInfo(path);
+            if (!file.Exists)
+                throw new FileNotFoundException("file not found", path);
+
+            string full = file.FullName;
+            string name = Path.GetFileNameWithoutExtension(full);
+            ILayer layer = new VectorLayer(name, new ShapeFile(full, true))
+            {
+                SRID = 4326,
+                CoordinateTransformation = Wgs84toGoogleMercator,
+                TargetSRID = 3857,
+                Style = style,
+                SmoothingMode = SmoothingMode.AntiAlias
+            };
+            return layer;
         }
 
         private void FrmMap_Resize(object sender, EventArgs e)

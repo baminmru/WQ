@@ -118,6 +118,82 @@ namespace IntersectionTest
         }
 
 
+        // http://www.cyberforum.ru/windows-forms/thread976818.html
+        public static PointF[] Line2Poly( PointF StartPointF,PointF EndPointF, int kink)
+        {
+
+            double delta = kink * 360.0 / (2.0 * Math.PI * 6378137.0);
+
+            double angle = //угол между прямой и Ох
+                (
+                    Math.PI / 2 + //поворачиваем прямую - находим угол перпендикуляра
+                    (
+                        Math.Atan
+                            (
+                                (EndPointF.Y - StartPointF.Y) /
+                                (EndPointF.X - StartPointF.X)
+                            )
+                    )
+                );
+
+            double sin = Math.Sin(angle );
+            double cos = Math.Cos(angle );
+
+            float x = (float)(StartPointF.X + delta * cos);
+            float y = (float)(StartPointF.Y + delta * sin);
+
+            //конец перпендекуляра
+            //проведенного из начала прямой(StartPointF)
+            PointF p1 = new PointF(x, y);
+
+            x = (float)(EndPointF.X + delta * cos);
+            y = (float)(EndPointF.Y + delta * sin);
+
+            //конец перпендекуляра
+            //проведенного из конца прямой(EndPointF)
+            PointF p2 = new PointF(x, y);
+
+
+
+            double angle2 = //угол между прямой и Ох
+                (
+                    - Math.PI / 2 + //поворачиваем прямую - находим угол перпендикуляра
+                    (
+                        Math.Atan
+                            (
+                                (EndPointF.Y - StartPointF.Y) /
+                                (EndPointF.X - StartPointF.X)
+                            )
+                    )
+                );
+
+            double sin2 = Math.Sin(angle2);
+            double cos2 = Math.Cos(angle2);
+
+            float x2 = (float)(StartPointF.X + delta * cos2);
+            float y2 = (float)(StartPointF.Y + delta * sin2);
+
+            //конец перпендекуляра
+            //проведенного из начала прямой(StartPointF)
+            PointF p3 = new PointF(x2, y2);
+
+            x2 = (float)(EndPointF.X + delta * cos2);
+            y2 = (float)(EndPointF.Y + delta * sin2);
+
+            //конец перпендекуляра
+            //проведенного из конца прямой(EndPointF)
+            PointF p4 = new PointF(x2, y2);
+
+            return new PointF[]
+                     {
+                        p1,
+                        p3,
+                        p2,
+                        p4
+                     };
+        }
+
+
         // see http://www.bdcc.co.uk/Gmaps/Services.htm
         // http://www.cyberforum.ru/csharp-beginners/thread1237322.html        
         public static List<TrackPoint> GDouglasPeucker(List<TrackPoint> source, int kink)
