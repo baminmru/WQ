@@ -19,6 +19,7 @@ using System.Threading;
 
 
 
+
 namespace IntersectionTest
 {
     public partial class Form1 : Form
@@ -493,6 +494,281 @@ namespace IntersectionTest
         {
             frmMap f = new frmMap();
             f.Show();
+        }
+
+        private void Button2_Click_1(object sender, EventArgs e)
+        {
+            if (txtCN.Text == "") return;
+
+            // get parameters
+            try
+            {
+                MinV = Double.Parse(txtMinV.Text);
+            }
+            catch
+            {
+                MinV = 3.0;
+            }
+
+
+            DirectoryInfo di = new DirectoryInfo(txtTrackPath.Text);
+            if (!di.Exists) return;
+            string outDir = txtTrackPath.Text.Replace(@"\opt", @"\lnk");
+            DirectoryInfo di2 = new DirectoryInfo(outDir);
+            if (!di2.Exists)
+                Directory.CreateDirectory(outDir);
+
+
+            System.Data.SqlClient.SqlConnection cn = new SqlConnection(txtCN.Text);
+            cn.Open();
+            if (cn.State == ConnectionState.Open)
+            {
+                DataTable dt ;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = cn;
+                DateTime startTime;
+                DateTime prevOut;
+                startTime = DateTime.Now;
+                prevOut = DateTime.Now;
+
+                int fCnt = 0;
+                int okCnt = 0;
+                int skipCnt = 0;
+                int rCnt = 0;
+                int zCnt = 0;
+                foreach (FileInfo fi in di.GetFiles("*.csv"))
+                {
+                    fCnt += 1;
+                   
+                   
+
+                    List<TrackPoint> rawTrack = new List<TrackPoint>();
+                    string TrackID = "";
+                    Double N = 0.0, E = 0.0, V = 0.0;
+                    CultureInfo ci = new CultureInfo("en-US");
+                    var trackData = File.ReadLines(fi.FullName);
+                    DateTime d = DateTime.MinValue;
+                    bool isHead;
+                    isHead = true;
+                    foreach (string s in trackData)
+                    {
+                        if (!isHead)
+                        {
+                            string[] cols = s.Split(';');
+
+
+                            if (cols.Length >= 6)
+                            {
+                                TrackID = cols[0];
+                                N = Double.Parse(cols[2], ci);
+                                E = Double.Parse(cols[3], ci);
+                                V = Double.Parse(cols[4], ci);
+
+                                if (cols[1].Length == 23)
+                                {
+                                    try
+                                    {
+                                        d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }
+
+                                TrackPoint tp = new TrackPoint() { X = N, Y = E, V = V, T = d, M = cols[5] };
+                                rawTrack.Add(tp);
+                                //Total++;
+                            }
+                        }
+                        else
+                        {
+                            isHead = false;
+                        }
+                    }
+
+                    string geom;
+                
+                    { 
+                        StringBuilder sb = new StringBuilder();
+                      
+                        string prevObj = "";
+                        string curObj;
+                        DateTime tStart;
+                        Double wLen=0.0;
+                        double spd=0.0;
+                        tStart = rawTrack[0].T;
+                        for (int i = 1; i < rawTrack.Count; i++)
+                        {
+                            geom = "LINESTRING(";
+
+                            geom += rawTrack[i - 1].Y.ToString("0.0000000000", ci) + " " + rawTrack[i - 1].X.ToString("0.0000000000", ci);
+                            geom += "," + rawTrack[i].Y.ToString("0.0000000000", ci) + " " + rawTrack[i].X.ToString("0.0000000000", ci);
+
+                            geom += ")";
+                            dt = new DataTable();
+                            cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1";
+                          
+
+                            SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                            sda.Fill(dt);
+                            if (dt.Rows.Count == 1)
+                            {
+                                okCnt++;
+                                curObj = dt.Rows[0]["OBJECT_ID"].ToString();
+                                if (prevObj != curObj)
+                                {
+                                    if (prevObj != "")
+                                    {
+                                        spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
+                                        if (spd > MinV)
+                                        {
+                                            rCnt++;
+                                            sb.AppendLine(prevObj + ";" + TrackID + ";" + tStart.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                                        }
+                                        else
+                                        {
+                                            zCnt++;
+                                        }
+                                    }
+
+                                    // начало нового сегмента
+                                    tStart = rawTrack[i - 1].T;
+                                    wLen = Math.Abs((rawTrack[i-1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V ;
+                                    
+                                    prevObj = curObj;
+                                }
+                                else
+                                {
+                                    // засчитываем сегмент
+                                    wLen += Math.Abs((rawTrack[i-1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V ;
+                                }
+
+                            }
+                            else if(dt.Rows.Count>1)
+                            {
+                                if (prevObj != "")
+                                {
+                                    bool prevFound = false;
+                                    for (int j = 0; j < dt.Rows.Count; j++)
+                                    {
+                                        if (dt.Rows[j]["OBJECT_ID"].ToString() == prevObj)
+                                        {
+                                            // есть вероятность, что все еще едем по той же улице
+                                            // засчитываем сегмент
+                                            wLen += Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
+                                            okCnt++;
+                                            prevFound = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!prevFound)
+                                    {
+                                        // уехали на другую улицу - записываем
+
+                                        spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
+                                        if (spd > MinV)
+                                        {
+                                            rCnt++;
+                                            sb.AppendLine(prevObj + ";" + TrackID + ";" + tStart.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                                        }
+                                        else
+                                        {
+                                            zCnt++;
+                                        }
+                                        
+
+                                        // нет однозначности куда поехали - сегмент не учитываем
+                                        prevObj = "";
+                                        tStart = rawTrack[i].T;
+                                        wLen = 0;
+                                        skipCnt++;
+                                    }
+                                }
+                                else
+                                {
+
+                                    skipCnt++;
+                                }
+                                 
+                               
+                            }
+                            else // row.count=0 !!!
+                            {
+                                if (prevObj != "")
+                                {
+                                  
+                                    // уехали на улицу вне сети - записываем предыдущий сегмент
+                                    spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
+                                    if (spd > MinV)
+                                    {
+                                        rCnt++;
+                                        sb.AppendLine(prevObj + ";" + TrackID + ";" + tStart.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                                    }
+                                    else
+                                    {
+                                        zCnt++;
+                                    }
+                                }
+                                tStart = rawTrack[i].T;
+                                wLen = 0;
+                                prevObj = "";
+                            }
+                        }
+
+                        if (prevObj != "")
+                        {
+                            spd = (wLen / Math.Abs((rawTrack[rawTrack.Count - 1].T - tStart).TotalHours));
+                            if (spd > MinV)
+                            {
+                                rCnt++;
+                                sb.AppendLine(prevObj + ";" + TrackID + ";" + tStart.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                            }
+                            else
+                            {
+                                zCnt++;
+                            }
+                            
+                        }
+
+                        if (sb.ToString() != "")
+                            File.WriteAllText(fi.FullName.Replace(@"\opt\",@"\lnk\"), sb.ToString());
+                    }
+
+                    TimeSpan ts = DateTime.Now - startTime;
+                   
+                    
+                    if (ts.TotalSeconds > 0 && (DateTime.Now-prevOut).TotalSeconds > 1) {
+                        label1.Text = fi.Name;
+                        lblCnt.Text = "Files="+fCnt.ToString() +" FPS=" +((double)fCnt / ts.TotalSeconds).ToString("#0.000") 
+                            +"\r\nGood=" + okCnt.ToString() +" Skip=" +skipCnt.ToString() + "\r\nZero=" + zCnt.ToString() +"\r\nRecs=" + rCnt.ToString();
+                        Application.DoEvents();
+                        prevOut = DateTime.Now;
+                    }
+                   
+
+
+                }
+
+
+            }
+            cn.Close();
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

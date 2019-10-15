@@ -43,6 +43,11 @@
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.lblCnt = new System.Windows.Forms.Label();
             this.cmsShowMap = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.txtCN = new System.Windows.Forms.TextBox();
+            this.button2 = new System.Windows.Forms.Button();
+            this.txtTrackPath = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.grpParam.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -85,7 +90,7 @@
             this.grpParam.Controls.Add(this.label2);
             this.grpParam.Location = new System.Drawing.Point(31, 12);
             this.grpParam.Name = "grpParam";
-            this.grpParam.Size = new System.Drawing.Size(416, 184);
+            this.grpParam.Size = new System.Drawing.Size(416, 150);
             this.grpParam.TabIndex = 4;
             this.grpParam.TabStop = false;
             this.grpParam.Text = "Параметры разбивки трека";
@@ -149,7 +154,7 @@
             // lblCnt
             // 
             this.lblCnt.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblCnt.Location = new System.Drawing.Point(464, 251);
+            this.lblCnt.Location = new System.Drawing.Point(464, 485);
             this.lblCnt.Name = "lblCnt";
             this.lblCnt.Size = new System.Drawing.Size(123, 54);
             this.lblCnt.TabIndex = 5;
@@ -157,7 +162,7 @@
             // 
             // cmsShowMap
             // 
-            this.cmsShowMap.Location = new System.Drawing.Point(31, 268);
+            this.cmsShowMap.Location = new System.Drawing.Point(35, 283);
             this.cmsShowMap.Name = "cmsShowMap";
             this.cmsShowMap.Size = new System.Drawing.Size(416, 60);
             this.cmsShowMap.TabIndex = 6;
@@ -165,11 +170,60 @@
             this.cmsShowMap.UseVisualStyleBackColor = true;
             this.cmsShowMap.Click += new System.EventHandler(this.CmsShowMap_Click);
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(32, 173);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(94, 13);
+            this.label5.TabIndex = 7;
+            this.label5.Text = "Connection String:";
+            // 
+            // txtCN
+            // 
+            this.txtCN.Location = new System.Drawing.Point(137, 170);
+            this.txtCN.Name = "txtCN";
+            this.txtCN.Size = new System.Drawing.Size(309, 20);
+            this.txtCN.TabIndex = 8;
+            this.txtCN.Text = "Server=localhost\\sqlexpress;Database=WQ;Trusted_Connection=True;";
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(30, 387);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(416, 59);
+            this.button2.TabIndex = 9;
+            this.button2.Text = "test";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.Button2_Click_1);
+            // 
+            // txtTrackPath
+            // 
+            this.txtTrackPath.Location = new System.Drawing.Point(137, 356);
+            this.txtTrackPath.Name = "txtTrackPath";
+            this.txtTrackPath.Size = new System.Drawing.Size(309, 20);
+            this.txtTrackPath.TabIndex = 11;
+            this.txtTrackPath.Text = "D:\\bami\\projects\\WayQuality\\20190215\\1\\Tracks\\opt";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(32, 359);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(83, 13);
+            this.label6.TabIndex = 10;
+            this.label6.Text = "Путь к трекам:";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(589, 334);
+            this.ClientSize = new System.Drawing.Size(589, 548);
+            this.Controls.Add(this.txtTrackPath);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.button2);
+            this.Controls.Add(this.txtCN);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.cmsShowMap);
             this.Controls.Add(this.lblCnt);
             this.Controls.Add(this.grpParam);
@@ -179,9 +233,11 @@
             this.Name = "Form1";
             this.Text = "Работа с GPS данными";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.grpParam.ResumeLayout(false);
             this.grpParam.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -201,6 +257,11 @@
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Label lblCnt;
         private System.Windows.Forms.Button cmsShowMap;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox txtCN;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.TextBox txtTrackPath;
+        private System.Windows.Forms.Label label6;
     }
 }
 
