@@ -301,16 +301,25 @@ namespace IntersectionTest
                 {
                     if (index[i] > index[i - 1] + 1)
                     {
-                       
-
-                        d12=DistanceOnEarth(source[index[i]].X, source[index[i]].Y, source[index[i - 1]].X, source[index[i - 1]].Y);
-
                         DateTime t1, t2;
-                       
+
+                        
+                        d12 = 0;
+                        for(int idx = index[i - 1]; idx < index[i]; idx++)
+                        {
+                            t2 = source[idx+1 ].T;
+                            t1 = source[idx].T;
+                            d12 += source[idx+1].V * Math.Abs((t2 - t1).TotalHours);
+                            
+                        }
+
+                        //d12=DistanceOnEarth(source[index[i]].X, source[index[i]].Y, source[index[i - 1]].X, source[index[i - 1]].Y);
+
+
+                        t1 = source[index[i - 1]].T;
                         t2 = source[index[i]].T;
-                        t1 = source[index[i-1]].T;
                         double V;
-                        V= d12 / Math.Abs((t2 - t1).TotalSeconds) * 3.6;  // метры в сек --> км в час
+                        V= d12 / Math.Abs((t2 - t1).TotalHours);  
                      
                         {
                             source[index[i]].V = V;

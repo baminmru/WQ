@@ -16,7 +16,7 @@ using GeoJSON.Net.Geometry;
 using Newtonsoft.Json;
 using System.Threading;
 //using BAMCIS.GeoJSON;
-
+using NLog;
 
 
 
@@ -24,7 +24,7 @@ namespace IntersectionTest
 {
     public partial class Form1 : Form
     {
-
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private static Double MinV = 1.0;
         private static Double Distance = 1.0;
         private static int ACount = 0;
@@ -34,61 +34,14 @@ namespace IntersectionTest
 
         private static object optLocker = new object();
         private static object jsonLocker = new object();
-        private static string header=@"""TrackID"";""RecordTime"";""N"";""E"";""Velocity"";""Marker""";
+        // private static string header=@"""TrackID"";""RecordTime"";""N"";""E"";""Velocity"";""Marker""";
         public Form1()
         {
             InitializeComponent();
         }
         private List<Intersections> iList = null;
 
-        private void Button1_Click(object sender, EventArgs e1)
-        {
-            iList = new List<Intersections>();
-            Random rnd = new Random();
-            int ICount = 0;
-            int Total = 0;
-            DateTime s = DateTime.Now;
-            DateTime e;
-            TimeSpan sp;
-            for (int i = 0; i < 25000; i++)
-            {
-                double x;
-                double y;
-                double w;
-                double h;
-
-                x = rnd.NextDouble() * 1000;
-                y = rnd.NextDouble() * 1000;
-                w = 1 + rnd.NextDouble() * 100;
-                h = 1 + rnd.NextDouble() * 100;
-
-                RectangleF r1 = new RectangleF((float)x, (float)y, (float)w, (float)h);
-
-                for (int j = 0; j < 10000; j++)
-                {
-
-                  
-                    x = rnd.NextDouble() * 1000;
-                    y = rnd.NextDouble() * 1000;
-                    w = 1 + rnd.NextDouble() * 100;
-                    h = 1 + rnd.NextDouble() * 100;
-                    RectangleF r2 = new RectangleF((float)x, (float)y, (float)w, (float)h);
-                    if (r1.IntersectsWith(r2))
-                    {
-                        ICount++;
-                        iList.Add(new Intersections() { Track = i,Street=j });
-                    }
-                    Total++;
-                }
-               
-                label1.Text = Total.ToString("0,0") + " : " + ICount.ToString("0,0") ;
-                Application.DoEvents();
-            }
-            e = DateTime.Now;
-            sp = new TimeSpan(e.Ticks - s.Ticks);
-            label1.Text = Total.ToString("0,0") + " : " + ICount.ToString("0,0") +"  -> "+ sp.ToString();
-
-        }
+       
 
         private void Button2_Click(object sender, EventArgs e)
         {
@@ -99,7 +52,7 @@ namespace IntersectionTest
                 FinishedCount = 0;
                 ACount = 0;
                 int show = 0;
-                   CultureInfo ci = new CultureInfo("en-US");
+                CultureInfo ci = new CultureInfo("en-US");
 
                 // get parameters
                 try
@@ -138,15 +91,16 @@ namespace IntersectionTest
                 // clean directory
                 if (Directory.Exists(path2save))
                 {
-                    try { Directory.Delete(path2save ,true); }
+                    try { Directory.Delete(path2save, true); }
                     catch { }
                 }
-
-                while (Directory.Exists(path2save))
+                int cnt = 100;
+                while (Directory.Exists(path2save) && cnt > 0)
                 {
-                    label1.Text = " Удвление файлов " + DateTime.Now;
+                    cnt--;
+                    label1.Text = " Удаление файлов " + DateTime.Now;
                     Application.DoEvents();
-                   
+
                 }
 
 
@@ -157,28 +111,36 @@ namespace IntersectionTest
                     catch { }
                 }
 
-                if (!Directory.Exists(path2save +"\\opt"))
+                if (!Directory.Exists(path2save + "\\opt"))
                 {
-                    try { Directory.CreateDirectory(path2save+"\\opt"); }
+                    try { Directory.CreateDirectory(path2save + "\\opt"); }
                     catch { }
                 }
 
-                if (!Directory.Exists(path2save + "\\GeoJSON"))
+                if (!Directory.Exists(path2save + "\\lnk"))
                 {
-                    try { Directory.CreateDirectory(path2save + "\\GeoJSON"); }
+                    try { Directory.CreateDirectory(path2save + "\\lnk"); }
                     catch { }
                 }
+
+                //if (!Directory.Exists(path2save + "\\GeoJSON"))
+                //{
+                //    try { Directory.CreateDirectory(path2save + "\\GeoJSON"); }
+                //    catch { }
+                //}
 
 
                 // read raw file and split to individual tracks
                 var it = File.ReadLines(fi.FullName);
 
                 string TrackID = "";
-                             string sNE;
+                string sNE;
                 Double N = 0.0, E = 0.0, V = 0.0;
 
 
                 Dictionary<string, List<string>> Reorg = new Dictionary<string, List<string>>();
+
+                logger.Info("Read tracks from " + fi.FullName);
                 // pass 1
                 foreach (string s in it)
                 {
@@ -192,7 +154,7 @@ namespace IntersectionTest
                         N = N * 180 / Math.PI;
                         E = E * 180 / Math.PI;
 
-                        sNE = cols[0] + ";" + cols[3] + ";" + N.ToString(ci) + ";" + E.ToString(ci) + ";" + cols[6] + ";" + cols[7] ;
+                        sNE = cols[0] + ";" + cols[3] + ";" + N.ToString(ci) + ";" + E.ToString(ci) + ";" + cols[6];
 
                         if (Reorg.ContainsKey(TrackID))
                         {
@@ -220,6 +182,7 @@ namespace IntersectionTest
 
                 Total = 0;
                 show = 0;
+                logger.Info("Saveing reorganized tracks to individual files");
                 foreach (string s in Reorg.Keys)
                 {
                     File.AppendAllLines(path2save + "\\" + s + ".csv", Reorg[s]);
@@ -235,8 +198,9 @@ namespace IntersectionTest
                 }
                 Reorg.Clear();
 
+               logger.Info("Записано треков: " + Total.ToString());
 
-                label1.Text = "Записано треков: " + Total.ToString();
+               label1.Text = "Записано треков: " + Total.ToString();
                 Application.DoEvents();
 
 
@@ -244,13 +208,13 @@ namespace IntersectionTest
                 List<TrackPoint> rawTrack = new List<TrackPoint>();
                 ThreadPool.SetMinThreads(50, 0);
                 ThreadPool.SetMaxThreads(200, 0);
-                DirectoryInfo di = new DirectoryInfo(path2save +"\\");
+                DirectoryInfo di = new DirectoryInfo(path2save + "\\");
 
+                logger.Info("Analizing traks");
                 Total = 0;
+                timer1.Enabled = true;
                 foreach (FileInfo tFile in di.GetFiles("*.csv"))
                 {
-                    timer1.Enabled = true;
-
                     AState a = new AState()
                     {
                         FileName = tFile.FullName,
@@ -260,7 +224,41 @@ namespace IntersectionTest
                     ThreadPool.QueueUserWorkItem(AnalizeTrackQ, a);
                 }
 
-           
+
+                // wait while pass2 finished
+                while (ACount > 0)
+                {
+                    System.Threading.Thread.Sleep(1000);
+                    Application.DoEvents();
+                }
+
+                // pass 3
+                FinishedCount = 0;
+                ACount = 0;
+
+                di = new DirectoryInfo(path2save + "\\opt");
+                timer2.Enabled = true;
+                {
+
+                    startTime = DateTime.Now;
+
+                    ThreadPool.SetMinThreads(12, 0);
+                    ThreadPool.SetMaxThreads(20, 0);
+
+                    foreach (FileInfo fi2 in di.GetFiles("*.csv"))
+                    {
+                        fCnt += 1;
+                        AState a = new AState()
+                        {
+                            FileName = fi2.FullName,
+                            SavePath = fi2.DirectoryName
+                        };
+                        ACount++;
+                        ThreadPool.QueueUserWorkItem(LinkFile, a);
+                    }
+
+
+                }
 
             }
         }
@@ -272,9 +270,9 @@ namespace IntersectionTest
         private static List<List<TrackPoint>> SptitTrack(List<TrackPoint> Track)
         {
             List<List<TrackPoint>> l = new List<List<TrackPoint>>();
-           
 
-            if(Track.Count<2)
+
+            if (Track.Count < 2)
             {
                 l.Add(Track);
                 return l;
@@ -282,7 +280,7 @@ namespace IntersectionTest
 
             List<TrackPoint> cur = new List<TrackPoint>();
             TrackPoint LastMovePoint = Track[0];
-            foreach(TrackPoint tt in Track)
+            foreach (TrackPoint tt in Track)
             {
                 // если скорость зафиксирована, то используем её
                 if (tt.V > MinV)
@@ -294,7 +292,7 @@ namespace IntersectionTest
                 {
                     // возможно  скорость просто не фиксируется прибором
                     double d = Processors.DistanceOnEarth(tt.X, tt.Y, LastMovePoint.X, LastMovePoint.Y);
-                    if(d > Distance)
+                    if (d > Distance)
                     {
                         // если есть перемещение, то продолжаем записывать его в текущую поездку
                         LastMovePoint = tt;
@@ -316,11 +314,11 @@ namespace IntersectionTest
                     }
 
 
-                   
+
                 }
 
             }
-            if(cur.Count>0)
+            if (cur.Count > 0)
                 l.Add(cur);
             return l;
         }
@@ -334,59 +332,59 @@ namespace IntersectionTest
 
             AState a = (AState)state;
             List<TrackPoint> rawTrack = new List<TrackPoint>();
-
-            var trackData = File.ReadLines(a.FileName);
-            DateTime d = DateTime.MinValue;
-
-            foreach (string s in trackData)
+            try
             {
-                string[] cols = s.Split(';');
 
 
-                if (cols.Length >= 6)
+                var trackData = File.ReadLines(a.FileName);
+                DateTime d = DateTime.MinValue;
+
+                foreach (string s in trackData)
                 {
-                    TrackID = cols[0];
-                    N = Double.Parse(cols[2], ci);
-                    E = Double.Parse(cols[3], ci);
-                    V = Double.Parse(cols[4], ci);
-                    
-                    if (cols[1].Length == 23)
-                    {
-                        try
-                        {
-                            d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
-                        }
-                        catch
-                        {
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
-                        }
-                        catch
-                        {
-                        }
-                    }
-                    //try
-                    //{
-                    //    d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
-                    //}
-                    //catch
-                    //{
+                    string[] cols = s.Split(';');
 
-                    //    d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
 
-                    //}
-                    TrackPoint tp = new TrackPoint() { X = N, Y = E, V = V, T = d, M = cols[5] };
-                    rawTrack.Add(tp);
-                    //Total++;
+                    if (cols.Length >= 5)
+                    {
+                        TrackID = cols[0];
+                        N = Double.Parse(cols[2], ci);
+                        E = Double.Parse(cols[3], ci);
+                        V = Double.Parse(cols[4], ci);
+
+                        if (cols[1].Length == 23)
+                        {
+                            try
+                            {
+                                d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
+                            }
+                            catch
+                            {
+                            }
+                        }
+                        else
+                        {
+                            try
+                            {
+                                d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
+                            }
+                            catch
+                            {
+                            }
+                        }
+
+                        TrackPoint tp = new TrackPoint() { X = N, Y = E, V = V, T = d };
+                        rawTrack.Add(tp);
+                    }
                 }
-            }
 
-            AnalizeTrack(rawTrack, TrackID, a.SavePath);
+
+
+                AnalizeTrack(rawTrack, TrackID, a.SavePath);
+
+            }catch(System.Exception ex)
+            {
+                logger.Error(ex, "AnalizeQ for " + a.FileName);
+            }
             ACount--;
             FinishedCount++;
         }
@@ -395,87 +393,51 @@ namespace IntersectionTest
         {
             CultureInfo ci = new CultureInfo("en-US");
 
-            Track.Reverse();
+            // сортируем список по времени
+            Track.Sort();
+
             // разбиваем на поездки
-
-
             List<List<TrackPoint>> l = SptitTrack(Track);
             int driveIndex = 0;
             foreach (List<TrackPoint> t in l)
             {
                 Total++;
                 driveIndex++;
-                List<TrackPoint> optTrack;
-                List<string> optimizedTrack = new List<string>();
-                optimizedTrack.Add(header);
-
-                optTrack = Processors.GDouglasPeucker(t, 10);
-                if (optTrack.Count > 1)
+                try
                 {
+                    List<TrackPoint> optTrack;
+                    List<string> optimizedTrack = new List<string>();
+                    //optimizedTrack.Add(header);
 
-                    foreach (TrackPoint tp in optTrack)
+                    optTrack = Processors.GDouglasPeucker(t, 10);
+                    if (optTrack.Count > 1)
                     {
-                        optimizedTrack.Add(TrackID + ";" + tp.T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + tp.X.ToString(ci) + ";" + tp.Y.ToString(ci) + ";" + tp.V.ToString("0.##", ci) + ";" + tp.M);
+
+                        foreach (TrackPoint tp in optTrack)
+                        {
+                            optimizedTrack.Add(TrackID + "." + driveIndex.ToString() + ";" + tp.T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + tp.X.ToString(ci) + ";" + tp.Y.ToString(ci) + ";" + tp.V.ToString("0.##", ci));
+                        }
+                        lock (optLocker)
+                        {
+                            File.WriteAllLines(path2save + "\\opt\\" + TrackID + "." + driveIndex.ToString() + ".csv", optimizedTrack);
+                        }
                     }
-                    lock (optLocker)
-                    {
-                        File.WriteAllLines(path2save + "\\opt\\" + TrackID + "." + driveIndex.ToString() + ".csv", optimizedTrack);
-                    }
-                }
 
-
-                // write GeoJSON using GeoJson.Net
-                FeatureCollection fc = new FeatureCollection();
-                fc.CRS = GeoJSON.Net.CoordinateReferenceSystem.DefaultCRS.Instance;
-                foreach (TrackPoint tp in optTrack)
+                }catch(System.Exception ex)
                 {
-
-                    var geom = new GeoJSON.Net.Geometry.Point(new Position(tp.X, tp.Y));
-                    var props = new Dictionary<string, object>{
-                                    { "ele", tp.V },
-                                    { "time", tp.T }
-                                };
-                    var feature = new Feature(geom, props);
-                    fc.Features.Add(feature);
+                    logger.Error(ex, "AnalizeTrack for " + TrackID + "." + driveIndex.ToString());
                 }
-
-                string j = JsonConvert.SerializeObject(fc);
-                lock (jsonLocker)
-                {
-                    File.WriteAllText(path2save + "\\GeoJSON\\" + TrackID + "." + driveIndex.ToString() + ".json", j);
-                }
-
-
-
-                // write GeoJSON using BAMCIS.GeoJson
-                //List<Feature> lf = new List<Feature>();
-                //foreach (TrackPoint tp in optTrack)
-                //{
-
-                //    var geom = new BAMCIS.GeoJSON.Point(new Position(tp.X, tp.Y));
-                //    var props = new Dictionary<string, object>{
-                //                    { "ele", tp.V },
-                //                    { "time", tp.T }
-                //                };
-                //    var feature = new Feature(geom, props);
-                //    lf.Add(feature);
-                //}
-
-                //FeatureCollection fc = new FeatureCollection(lf);
-                //lock (jsonLocker)
-                //{
-                //    File.WriteAllText(path2save + "\\GeoJSON\\" + TrackID + "." + driveIndex.ToString() + ".json", fc.ToJson());
-                //}
+               
 
             }
-            
 
-            
+
+
         }
 
         private void Timer1_Tick(object sender, EventArgs e)
         {
-            lblCnt.Text = "В очереди: " +ACount.ToString() + "\r\n Сделано: " + FinishedCount.ToString();
+            lblCnt.Text = "В очереди: " + ACount.ToString() + "\r\n Сделано: " + FinishedCount.ToString();
             label1.Text = "Обработано поездок: " + Total.ToString();
             if (ACount == 0)
             {
@@ -487,7 +449,7 @@ namespace IntersectionTest
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            e.Cancel = (ACount != 0);
+            //e.Cancel = (ACount != 0);
         }
 
         private void CmsShowMap_Click(object sender, EventArgs e)
@@ -496,10 +458,470 @@ namespace IntersectionTest
             f.Show();
         }
 
+
+        private string GetDirection(TrackPoint s, TrackPoint e)
+        {
+            string d;
+            if (s.X < e.X)
+            {
+                d = "G";
+            }
+            else
+            {
+                if (s.X > e.X)
+                {
+                    d = "R";
+                }
+                else
+                {
+                    if (s.Y < e.Y)
+                    {
+                        d = "G";
+                    }
+                    else
+                    {
+                        d = "R";
+                    }
+                }
+            }
+            return d;
+
+        }
+
+
+        private void Save2DB(Object a)
+        {
+
+            string FileName;
+            FileName = ((AState)a).FileName;
+            DateTime prevOut = DateTime.Now;
+            DataTable dt;
+            System.Data.SqlClient.SqlConnection cn;
+
+            List<TrackPoint> rawTrack = new List<TrackPoint>();
+            string TrackID = "";
+            string ObjectId = "";
+            string Direction = "";
+            Double N = 0.0, E = 0.0, V = 0.0;
+            CultureInfo ci = new CultureInfo("en-US");
+
+            try
+            {
+
+                var trackData = File.ReadLines(FileName);
+                DateTime d = DateTime.MinValue;
+                cn = new SqlConnection(txtCN.Text);
+                cn.Open();
+                if (cn.State == ConnectionState.Open)
+                {
+                    SqlCommand cmd = new SqlCommand();
+                    cmd.Connection = cn;
+                    
+                    foreach (string s in trackData)
+                    {
+
+                        string[] cols = s.Split(';');
+                        if (cols.Length >= 5)
+                        {
+                            ObjectId = cols[0];
+                            TrackID = cols[1];
+                            Direction = cols[2];
+                            V = Double.Parse(cols[4], ci);
+
+                            //if (cols[3].Length == 23)
+                            //{
+                            //    try
+                            //    {
+                            //        d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
+                            //    }
+                            //    catch
+                            //    {
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    try
+                            //    {
+                            //        d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
+                            //    }
+                            //    catch
+                            //    {
+                            //    }
+                            //}
+
+                            string qry = @"INSERT INTO Track2OBJ([OBJECT_ID] ,[TRACK],[GPSTIME],[DIRECTION] ,[V])VALUES(" +
+                            ObjectId +",'" + TrackID +"',convert(datetime,'" + cols[3] +"',121),'" + Direction +"'," + V.ToString("0.00",ci) +")";
+                            cmd.CommandText = qry;
+                            try
+                            {
+                                cmd.ExecuteNonQuery();
+                            }catch(System.Exception ex)
+                            {
+                                logger.Error(ex, "Save2DB for "  +FileName);
+                            }
+                            
+
+                        }
+
+                    }
+                }
+                cn.Close();
+            }
+            catch (System.Exception ex)
+            {
+                logger.Error(ex, "Save2DB for " + FileName);
+            }
+            ACount--;
+            FinishedCount++;
+        }
+    
+        private void LinkFile(Object a)
+        {
+
+            string FileName;
+            FileName = ((AState)a).FileName;
+            DateTime prevOut = DateTime.Now;
+            DataTable dt;
+            System.Data.SqlClient.SqlConnection cn;
+
+            List<TrackPoint> rawTrack = new List<TrackPoint>();
+            string TrackID = "";
+            Double N = 0.0, E = 0.0, V = 0.0;
+            CultureInfo ci = new CultureInfo("en-US");
+
+            try
+            {
+
+                var trackData = File.ReadLines(FileName);
+                DateTime d = DateTime.MinValue;
+                //bool isHead;
+                //isHead = true;
+                foreach (string s in trackData)
+                {
+                    //if (!isHead)
+                    {
+                        string[] cols = s.Split(';');
+
+
+                        if (cols.Length >= 5)
+                        {
+                            TrackID = cols[0];
+                            N = Double.Parse(cols[2], ci);
+                            E = Double.Parse(cols[3], ci);
+                            V = Double.Parse(cols[4], ci);
+
+                            if (cols[1].Length == 23)
+                            {
+                                try
+                                {
+                                    d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
+                                }
+                                catch
+                                {
+                                }
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
+                                }
+                                catch
+                                {
+                                }
+                            }
+
+                            TrackPoint tp = new TrackPoint() { X = N, Y = E, V = V, T = d };
+                            rawTrack.Add(tp);
+                            //Total++;
+                        }
+                    }
+                    //else
+                    //{
+                    //    isHead = false;
+                    //}
+                }
+
+                string geom;
+
+                {
+                    StringBuilder sb = new StringBuilder();
+
+                    string prevObj = "";
+                    string curObj;
+                    DateTime tStart;
+                    TrackPoint startPoint;
+                    Double wLen = 0.0;
+                    double spd = 0.0;
+                    string Direction = "";
+                    if (rawTrack.Count > 0)
+                    {
+
+                        cn = new SqlConnection(txtCN.Text);
+                        cn.Open();
+                        if (cn.State == ConnectionState.Open)
+                        {
+
+                            tStart = rawTrack[0].T;
+                            startPoint = rawTrack[0];
+
+                            for (int i = 1; i < rawTrack.Count; i++)
+                            {
+                                geom = "LINESTRING(";
+
+                                geom += rawTrack[i - 1].Y.ToString("0.0000000000", ci) + " " + rawTrack[i - 1].X.ToString("0.0000000000", ci);
+                                geom += "," + rawTrack[i].Y.ToString("0.0000000000", ci) + " " + rawTrack[i].X.ToString("0.0000000000", ci);
+
+                                geom += ")";
+                                dt = new DataTable();
+                                double gLen;
+
+                                // проверяем на полное попадание линии в буфер
+                                {
+                                    SqlCommand cmd = new SqlCommand();
+                                    cmd.Connection = cn;
+                                    //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1";
+                                    //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STContains('" + geom + "') = 1";
+                                    //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 and geography::STGeomFromText( BUFFER.STIntersection('" + geom + "').ToString(),4326).STLength() > geography::STGeomFromText('" + geom + "',4326).STLength()/2";
+                                    cmd.CommandText = "select geography::STGeomFromText('" + geom + "', 4326).STLength() L";
+                                    SqlDataAdapter sda = new SqlDataAdapter(cmd);
+
+                                    try
+                                    {
+                                        sda.Fill(dt);
+                                    }
+                                    catch
+                                    {
+                                        logger.Debug(cmd.CommandText);
+                                    }
+
+                                    gLen = (double)dt.Rows[0]["L"];
+                                    sda.Dispose();
+                                    cmd.Dispose();
+                                }
+
+                                //// делаем более мягкое условие - пересечение
+                                //if (dt.Rows.Count == 0)
+                                {
+                                    dt = new DataTable();
+                                    iQryCnt++;
+                                    SqlCommand cmd = new SqlCommand();
+                                    cmd.Connection = cn;
+                                    //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1";
+                                    //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STContains('" + geom + "') = 1";
+                                    //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 and geography::STGeomFromText( BUFFER.STIntersection('" + geom + "').ToString(),4326).STLength() > geography::STGeomFromText('" + geom + "',4326).STLength()/2";
+                                    cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 and geography::STGeomFromText( BUFFER.STIntersection('" + geom + "').ToString(),4326).STLength() > " + (gLen/2).ToString(ci); // geography::STGeomFromText('" + geom + "',4326).STLength()/2";
+                                    SqlDataAdapter sda = new SqlDataAdapter(cmd);
+
+                                    try
+                                    {
+                                        sda.Fill(dt);
+                                    }
+                                    catch
+                                    {
+                                        logger.Debug(cmd.CommandText);
+                                    }
+
+
+                                    sda.Dispose();
+                                    cmd.Dispose();
+                                }
+                                //else
+                                //{
+                                //    cQryCnt++;
+                                //}
+
+
+                                if (dt.Rows.Count == 1)
+                                {
+                                    okCnt++;
+                                    curObj = dt.Rows[0]["OBJECT_ID"].ToString();
+                                    if (prevObj != curObj)
+                                    {
+                                        if (prevObj != "")
+                                        {
+                                            spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
+                                            if (spd > MinV)
+                                            {
+                                                rCnt++;
+                                                Direction = GetDirection(startPoint, rawTrack[i - 1]);
+                                                sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[i - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                                            }
+                                            else
+                                            {
+                                                zCnt++;
+                                            }
+                                        }
+
+                                        // начало нового сегмента
+                                        tStart = rawTrack[i - 1].T;
+                                        startPoint = rawTrack[i - 1];
+                                        wLen = Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
+
+                                        prevObj = curObj;
+                                    }
+                                    else
+                                    {
+                                        // засчитываем сегмент
+                                        wLen += Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
+                                    }
+
+                                }
+                                else if (dt.Rows.Count > 1)
+                                {
+                                    string objList = "";
+
+                                    if (prevObj != "")
+                                    {
+                                        bool prevFound = false;
+                                        for (int j = 0; j < dt.Rows.Count; j++)
+                                        {
+                                            if (j > 0)
+                                                objList += ",";
+                                            objList += dt.Rows[j]["OBJECT_ID"].ToString();
+
+                                            if (dt.Rows[j]["OBJECT_ID"].ToString() == prevObj)
+                                            {
+                                                // есть вероятность, что все еще едем по той же улице
+                                                // засчитываем сегмент
+                                                wLen += Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
+                                                okCnt++;
+                                                prevFound = true;
+                                                break;
+                                         
+                                            }
+                                        }
+
+                                        if (!prevFound)
+                                        {
+                                            // уехали на другую улицу - записываем
+
+                                            spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
+                                            if (spd > MinV)
+                                            {
+                                                rCnt++;
+                                                Direction = GetDirection(startPoint, rawTrack[i - 1]);
+                                                sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[i - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                                            }
+                                            else
+                                            {
+                                                zCnt++;
+                                            }
+
+
+
+                                            // нет однозначности куда поехали
+                                            // пробуем найти ближайшее
+
+                                            DataTable dt2 = new DataTable();
+                                            SqlCommand cmd = new SqlCommand();
+                                            cmd.Connection = cn;
+                                            cmd.CommandText = @"SELECT top ( 1 ) OBJECT_ID, DATA.STDistance('" + geom +"') FROM UDS where object_id in(" + objList + ")  order by DATA.STDistance('" + geom + "')";
+                                            SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                                            sda.Fill(dt2);
+                                            sda.Dispose();
+                                            cmd.Dispose();
+
+                                            prevObj = dt2.Rows[0]["OBJECT_ID"].ToString();
+                                            tStart = rawTrack[i].T;
+                                            wLen = 0;
+                                            startPoint = rawTrack[i];
+                                            okCnt++;
+                                            dt2.Dispose();
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        skipCnt++;
+                                    }
+
+
+                                }
+                                else // row.count=0 !!!
+                                {
+
+                                
+                                    
+
+
+                                    if (prevObj != "")
+                                    {
+
+                                        // уехали на улицу вне сети - записываем предыдущий сегмент
+                                        spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
+                                        if (spd > MinV)
+                                        {
+                                            rCnt++;
+                                            Direction = GetDirection(startPoint, rawTrack[i - 1]);
+                                            sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[i - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                                        }
+                                        else
+                                        {
+                                            zCnt++;
+                                        }
+                                    }
+                                    //tStart = rawTrack[i].T;
+                                    //wLen = 0;
+                                    prevObj = "";
+                                    skipCnt++;
+                                }
+                                dt.Dispose();
+                            }
+
+                            if (prevObj != "")
+                            {
+                                spd = (wLen / Math.Abs((rawTrack[rawTrack.Count - 1].T - tStart).TotalHours));
+                                if (spd > MinV)
+                                {
+                                    rCnt++;
+                                    Direction = GetDirection(startPoint, rawTrack[rawTrack.Count - 1]);
+                                    sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[rawTrack.Count - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                                }
+                                else
+                                {
+                                    zCnt++;
+                                }
+
+                            }
+                        }
+                        cn.Close();
+                        if (sb.ToString() != "")
+                        {
+                            lock (optLocker)
+                            {
+                                File.WriteAllText(FileName.Replace(@"\opt\", @"\lnk\"), sb.ToString());
+                            }
+                        }
+                    }
+
+
+
+                }
+            }
+            catch(System.Exception ex)
+            {
+                
+                logger.Error(ex,"LinkFile for " + FileName);
+            }
+            ACount--;
+            FinishedCount++;
+        }
+
+        private int fCnt = 0;
+        private int okCnt = 0;
+        private int iQryCnt = 0;
+        private int cQryCnt = 0;
+        private int skipCnt = 0;
+        private int rCnt = 0;
+        private int zCnt = 0;
+        
+        private DateTime startTime;
+
         private void Button2_Click_1(object sender, EventArgs e)
         {
             if (txtCN.Text == "") return;
-
+            button2.Enabled = false;
             // get parameters
             try
             {
@@ -509,7 +931,7 @@ namespace IntersectionTest
             {
                 MinV = 3.0;
             }
-
+            FinishedCount = 0;
 
             DirectoryInfo di = new DirectoryInfo(txtTrackPath.Text);
             if (!di.Exists) return;
@@ -519,256 +941,104 @@ namespace IntersectionTest
                 Directory.CreateDirectory(outDir);
 
 
-            System.Data.SqlClient.SqlConnection cn = new SqlConnection(txtCN.Text);
-            cn.Open();
-            if (cn.State == ConnectionState.Open)
+            timer2.Enabled = true;
             {
-                DataTable dt ;
-                SqlCommand cmd = new SqlCommand();
-                cmd.Connection = cn;
-                DateTime startTime;
-                DateTime prevOut;
+  
                 startTime = DateTime.Now;
-                prevOut = DateTime.Now;
 
-                int fCnt = 0;
-                int okCnt = 0;
-                int skipCnt = 0;
-                int rCnt = 0;
-                int zCnt = 0;
+                ThreadPool.SetMinThreads(12, 0);
+                ThreadPool.SetMaxThreads(20, 0);
+
                 foreach (FileInfo fi in di.GetFiles("*.csv"))
                 {
                     fCnt += 1;
-                   
-                   
-
-                    List<TrackPoint> rawTrack = new List<TrackPoint>();
-                    string TrackID = "";
-                    Double N = 0.0, E = 0.0, V = 0.0;
-                    CultureInfo ci = new CultureInfo("en-US");
-                    var trackData = File.ReadLines(fi.FullName);
-                    DateTime d = DateTime.MinValue;
-                    bool isHead;
-                    isHead = true;
-                    foreach (string s in trackData)
+                    AState a = new AState()
                     {
-                        if (!isHead)
-                        {
-                            string[] cols = s.Split(';');
-
-
-                            if (cols.Length >= 6)
-                            {
-                                TrackID = cols[0];
-                                N = Double.Parse(cols[2], ci);
-                                E = Double.Parse(cols[3], ci);
-                                V = Double.Parse(cols[4], ci);
-
-                                if (cols[1].Length == 23)
-                                {
-                                    try
-                                    {
-                                        d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
-                                    }
-                                    catch
-                                    {
-                                    }
-                                }
-                                else
-                                {
-                                    try
-                                    {
-                                        d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
-                                    }
-                                    catch
-                                    {
-                                    }
-                                }
-
-                                TrackPoint tp = new TrackPoint() { X = N, Y = E, V = V, T = d, M = cols[5] };
-                                rawTrack.Add(tp);
-                                //Total++;
-                            }
-                        }
-                        else
-                        {
-                            isHead = false;
-                        }
-                    }
-
-                    string geom;
-                
-                    { 
-                        StringBuilder sb = new StringBuilder();
-                      
-                        string prevObj = "";
-                        string curObj;
-                        DateTime tStart;
-                        Double wLen=0.0;
-                        double spd=0.0;
-                        tStart = rawTrack[0].T;
-                        for (int i = 1; i < rawTrack.Count; i++)
-                        {
-                            geom = "LINESTRING(";
-
-                            geom += rawTrack[i - 1].Y.ToString("0.0000000000", ci) + " " + rawTrack[i - 1].X.ToString("0.0000000000", ci);
-                            geom += "," + rawTrack[i].Y.ToString("0.0000000000", ci) + " " + rawTrack[i].X.ToString("0.0000000000", ci);
-
-                            geom += ")";
-                            dt = new DataTable();
-                            cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1";
-                          
-
-                            SqlDataAdapter sda = new SqlDataAdapter(cmd);
-                            sda.Fill(dt);
-                            if (dt.Rows.Count == 1)
-                            {
-                                okCnt++;
-                                curObj = dt.Rows[0]["OBJECT_ID"].ToString();
-                                if (prevObj != curObj)
-                                {
-                                    if (prevObj != "")
-                                    {
-                                        spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
-                                        if (spd > MinV)
-                                        {
-                                            rCnt++;
-                                            sb.AppendLine(prevObj + ";" + TrackID + ";" + tStart.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
-                                        }
-                                        else
-                                        {
-                                            zCnt++;
-                                        }
-                                    }
-
-                                    // начало нового сегмента
-                                    tStart = rawTrack[i - 1].T;
-                                    wLen = Math.Abs((rawTrack[i-1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V ;
-                                    
-                                    prevObj = curObj;
-                                }
-                                else
-                                {
-                                    // засчитываем сегмент
-                                    wLen += Math.Abs((rawTrack[i-1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V ;
-                                }
-
-                            }
-                            else if(dt.Rows.Count>1)
-                            {
-                                if (prevObj != "")
-                                {
-                                    bool prevFound = false;
-                                    for (int j = 0; j < dt.Rows.Count; j++)
-                                    {
-                                        if (dt.Rows[j]["OBJECT_ID"].ToString() == prevObj)
-                                        {
-                                            // есть вероятность, что все еще едем по той же улице
-                                            // засчитываем сегмент
-                                            wLen += Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
-                                            okCnt++;
-                                            prevFound = true;
-                                            break;
-                                        }
-                                    }
-
-                                    if (!prevFound)
-                                    {
-                                        // уехали на другую улицу - записываем
-
-                                        spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
-                                        if (spd > MinV)
-                                        {
-                                            rCnt++;
-                                            sb.AppendLine(prevObj + ";" + TrackID + ";" + tStart.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
-                                        }
-                                        else
-                                        {
-                                            zCnt++;
-                                        }
-                                        
-
-                                        // нет однозначности куда поехали - сегмент не учитываем
-                                        prevObj = "";
-                                        tStart = rawTrack[i].T;
-                                        wLen = 0;
-                                        skipCnt++;
-                                    }
-                                }
-                                else
-                                {
-
-                                    skipCnt++;
-                                }
-                                 
-                               
-                            }
-                            else // row.count=0 !!!
-                            {
-                                if (prevObj != "")
-                                {
-                                  
-                                    // уехали на улицу вне сети - записываем предыдущий сегмент
-                                    spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
-                                    if (spd > MinV)
-                                    {
-                                        rCnt++;
-                                        sb.AppendLine(prevObj + ";" + TrackID + ";" + tStart.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
-                                    }
-                                    else
-                                    {
-                                        zCnt++;
-                                    }
-                                }
-                                tStart = rawTrack[i].T;
-                                wLen = 0;
-                                prevObj = "";
-                            }
-                        }
-
-                        if (prevObj != "")
-                        {
-                            spd = (wLen / Math.Abs((rawTrack[rawTrack.Count - 1].T - tStart).TotalHours));
-                            if (spd > MinV)
-                            {
-                                rCnt++;
-                                sb.AppendLine(prevObj + ";" + TrackID + ";" + tStart.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
-                            }
-                            else
-                            {
-                                zCnt++;
-                            }
-                            
-                        }
-
-                        if (sb.ToString() != "")
-                            File.WriteAllText(fi.FullName.Replace(@"\opt\",@"\lnk\"), sb.ToString());
-                    }
-
-                    TimeSpan ts = DateTime.Now - startTime;
-                   
-                    
-                    if (ts.TotalSeconds > 0 && (DateTime.Now-prevOut).TotalSeconds > 1) {
-                        label1.Text = fi.Name;
-                        lblCnt.Text = "Files="+fCnt.ToString() +" FPS=" +((double)fCnt / ts.TotalSeconds).ToString("#0.000") 
-                            +"\r\nGood=" + okCnt.ToString() +" Skip=" +skipCnt.ToString() + "\r\nZero=" + zCnt.ToString() +"\r\nRecs=" + rCnt.ToString();
-                        Application.DoEvents();
-                        prevOut = DateTime.Now;
-                    }
-                   
-
-
+                        FileName = fi.FullName,
+                        SavePath = fi.DirectoryName
+                    };
+                    ACount++;
+                    ThreadPool.QueueUserWorkItem(LinkFile, a);
                 }
 
 
             }
-            cn.Close();
+           
 
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void Timer2_Tick(object sender, EventArgs e)
+        {
+            lblCnt.Text = "Поездок:" + fCnt.ToString() +"\r\nВ очереди: " + ACount.ToString() + "\r\nОбработано: " + FinishedCount.ToString();
+
+            lblCnt.Text +="\r\n* Сегменты *\r\nДопущено=" + okCnt.ToString() +
+                 "\r\nContains = " + cQryCnt.ToString() + "\r\nIntersects = " + iQryCnt.ToString() +
+                 "\r\nПропущено=" + skipCnt.ToString() + "\r\nV<Min=" + zCnt.ToString() + "\r\nЗафиксировано=" + rCnt.ToString();
+            
+            Application.DoEvents();
+            
+            if (ACount == 0)
+            {
+            
+                timer2.Enabled = false;
+                button2.Enabled = true;
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (txtCN.Text == "") return;
+            button1.Enabled = false;
+            
+            // get parameters
+            FinishedCount = 0;
+
+            DirectoryInfo di = new DirectoryInfo(txtLinkPath.Text);
+            if (!di.Exists) return;
+
+            timer3.Enabled = true;
+
+            {
+
+                startTime = DateTime.Now;
+
+                ThreadPool.SetMinThreads(12, 0);
+                ThreadPool.SetMaxThreads(20, 0);
+
+                foreach (FileInfo fi in di.GetFiles("*.csv"))
+                {
+                    fCnt += 1;
+                    AState a = new AState()
+                    {
+                        FileName = fi.FullName,
+                        SavePath = fi.DirectoryName
+                    };
+                    ACount++;
+                    ThreadPool.QueueUserWorkItem(Save2DB, a);
+                }
+
+
+            }
+        }
+
+        private void timer3_Tick(object sender, EventArgs e)
+        {
+            lblCnt.Text = "Поездок:" + fCnt.ToString() + "\r\nВ очереди: " + ACount.ToString() + "\r\nОбработано: " + FinishedCount.ToString();
+
+            //lblCnt.Text += "\r\n* Сегменты *\r\nДопущено=" + okCnt.ToString() + "\r\nПропущено=" + skipCnt.ToString() + "\r\nВне скоростного режима=" + zCnt.ToString() + "\r\nУчтено=" + rCnt.ToString();
+            Application.DoEvents();
+
+            if (ACount == 0)
+            {
+
+                timer3.Enabled = false;
+                button1.Enabled = true;
+            }
         }
     }
 }

@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.button1 = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.opf = new System.Windows.Forms.OpenFileDialog();
             this.cmdCSV = new System.Windows.Forms.Button();
@@ -48,33 +47,28 @@
             this.button2 = new System.Windows.Forms.Button();
             this.txtTrackPath = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
+            this.timer2 = new System.Windows.Forms.Timer(this.components);
+            this.txtLinkPath = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
+            this.timer3 = new System.Windows.Forms.Timer(this.components);
             this.grpParam.SuspendLayout();
             this.SuspendLayout();
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(22, 470);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(248, 51);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Visible = false;
-            this.button1.Click += new System.EventHandler(this.Button1_Click);
-            // 
             // label1
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.Location = new System.Drawing.Point(453, 9);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(134, 90);
+            this.label1.Size = new System.Drawing.Size(172, 181);
             this.label1.TabIndex = 1;
             // 
             // cmdCSV
             // 
             this.cmdCSV.Location = new System.Drawing.Point(31, 202);
             this.cmdCSV.Name = "cmdCSV";
-            this.cmdCSV.Size = new System.Drawing.Size(416, 60);
+            this.cmdCSV.Size = new System.Drawing.Size(416, 24);
             this.cmdCSV.TabIndex = 2;
             this.cmdCSV.Text = "Open CSV";
             this.cmdCSV.UseVisualStyleBackColor = true;
@@ -153,18 +147,19 @@
             // 
             // lblCnt
             // 
-            this.lblCnt.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblCnt.Location = new System.Drawing.Point(464, 485);
+            this.lblCnt.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblCnt.Location = new System.Drawing.Point(452, 202);
             this.lblCnt.Name = "lblCnt";
-            this.lblCnt.Size = new System.Drawing.Size(123, 54);
+            this.lblCnt.Size = new System.Drawing.Size(173, 215);
             this.lblCnt.TabIndex = 5;
             this.lblCnt.TextAlign = System.Drawing.ContentAlignment.BottomRight;
             // 
             // cmsShowMap
             // 
-            this.cmsShowMap.Location = new System.Drawing.Point(35, 283);
+            this.cmsShowMap.Location = new System.Drawing.Point(30, 240);
             this.cmsShowMap.Name = "cmsShowMap";
-            this.cmsShowMap.Size = new System.Drawing.Size(416, 60);
+            this.cmsShowMap.Size = new System.Drawing.Size(416, 26);
             this.cmsShowMap.TabIndex = 6;
             this.cmsShowMap.Text = "Show MAP";
             this.cmsShowMap.UseVisualStyleBackColor = true;
@@ -185,40 +180,81 @@
             this.txtCN.Name = "txtCN";
             this.txtCN.Size = new System.Drawing.Size(309, 20);
             this.txtCN.TabIndex = 8;
-            this.txtCN.Text = "Server=localhost\\sqlexpress;Database=WQ;Trusted_Connection=True;";
+            this.txtCN.Text = "Server=localhost\\sqlexpress;Database=WQ;Trusted_Connection=True;MultipleActiveRes" +
+    "ultSets=true;";
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(30, 387);
+            this.button2.Location = new System.Drawing.Point(30, 309);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(416, 59);
+            this.button2.Size = new System.Drawing.Size(416, 28);
             this.button2.TabIndex = 9;
-            this.button2.Text = "test";
+            this.button2.Text = "Link Track to UDS";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.Button2_Click_1);
             // 
             // txtTrackPath
             // 
-            this.txtTrackPath.Location = new System.Drawing.Point(137, 356);
+            this.txtTrackPath.Location = new System.Drawing.Point(137, 278);
             this.txtTrackPath.Name = "txtTrackPath";
             this.txtTrackPath.Size = new System.Drawing.Size(309, 20);
             this.txtTrackPath.TabIndex = 11;
-            this.txtTrackPath.Text = "D:\\bami\\projects\\WayQuality\\20190215\\1\\Tracks\\opt";
+            this.txtTrackPath.Text = "D:\\bami\\projects\\WayQuality\\data\\1\\Tracks\\opt";
             // 
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(32, 359);
+            this.label6.Location = new System.Drawing.Point(32, 281);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(83, 13);
             this.label6.TabIndex = 10;
             this.label6.Text = "Путь к трекам:";
             // 
+            // timer2
+            // 
+            this.timer2.Interval = 1000;
+            this.timer2.Tick += new System.EventHandler(this.Timer2_Tick);
+            // 
+            // txtLinkPath
+            // 
+            this.txtLinkPath.Location = new System.Drawing.Point(137, 353);
+            this.txtLinkPath.Name = "txtLinkPath";
+            this.txtLinkPath.Size = new System.Drawing.Size(309, 20);
+            this.txtLinkPath.TabIndex = 14;
+            this.txtLinkPath.Text = "D:\\bami\\projects\\WayQuality\\data\\1\\Tracks\\lnk";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(32, 356);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(102, 13);
+            this.label7.TabIndex = 13;
+            this.label7.Text = "Путь к привязкам:";
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(30, 384);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(416, 28);
+            this.button1.TabIndex = 12;
+            this.button1.Text = "Load to DB";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // timer3
+            // 
+            this.timer3.Interval = 1000;
+            this.timer3.Tick += new System.EventHandler(this.timer3_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(589, 548);
+            this.ClientSize = new System.Drawing.Size(627, 426);
+            this.Controls.Add(this.txtLinkPath);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.txtTrackPath);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.button2);
@@ -229,7 +265,6 @@
             this.Controls.Add(this.grpParam);
             this.Controls.Add(this.cmdCSV);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.button1);
             this.Name = "Form1";
             this.Text = "Работа с GPS данными";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
@@ -242,8 +277,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.OpenFileDialog opf;
         private System.Windows.Forms.Button cmdCSV;
@@ -262,6 +295,11 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.TextBox txtTrackPath;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Timer timer2;
+        private System.Windows.Forms.TextBox txtLinkPath;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Timer timer3;
     }
 }
 
