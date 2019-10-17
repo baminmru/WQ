@@ -674,9 +674,9 @@ namespace IntersectionTest
 
                                 geom += ")";
                                 dt = new DataTable();
-                                double gLen;
+                                double gLen=0.0;
 
-                                // проверяем на полное попадание линии в буфер
+                                // считаем длину сегмента
                                 {
                                     SqlCommand cmd = new SqlCommand();
                                     cmd.Connection = cn;
@@ -698,19 +698,19 @@ namespace IntersectionTest
                                     gLen = (double)dt.Rows[0]["L"];
                                     sda.Dispose();
                                     cmd.Dispose();
+                                    dt.Dispose();
                                 }
 
-                                //// делаем более мягкое условие - пересечение
-                                //if (dt.Rows.Count == 0)
+                                // проверяем на попадание линии в буфер
                                 {
                                     dt = new DataTable();
-                                    iQryCnt++;
+                                    //iQryCnt++;
                                     SqlCommand cmd = new SqlCommand();
                                     cmd.Connection = cn;
                                     //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1";
                                     //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STContains('" + geom + "') = 1";
                                     //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 and geography::STGeomFromText( BUFFER.STIntersection('" + geom + "').ToString(),4326).STLength() > geography::STGeomFromText('" + geom + "',4326).STLength()/2";
-                                    cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 and geography::STGeomFromText( BUFFER.STIntersection('" + geom + "').ToString(),4326).STLength() > " + (gLen/2).ToString(ci); // geography::STGeomFromText('" + geom + "',4326).STLength()/2";
+                                    cmd.CommandText = @"SELECT top(1) OBJECT_ID, geography::STGeomFromText( BUFFER.STIntersection('" + geom + "').ToString(),4326).STLength() L FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 order by  geography::STGeomFromText( BUFFER.STIntersection('" + geom + "').ToString(),4326).STLength() desc"; // + (gLen/2).ToString(ci); // geography::STGeomFromText('" + geom + "',4326).STLength()/2";
                                     SqlDataAdapter sda = new SqlDataAdapter(cmd);
 
                                     try
@@ -731,15 +731,51 @@ namespace IntersectionTest
                                 //    cQryCnt++;
                                 //}
 
-
-                                if (dt.Rows.Count == 1)
+                                
+                                if (dt.Rows.Count > 0)
                                 {
-                                    okCnt++;
-                                    curObj = dt.Rows[0]["OBJECT_ID"].ToString();
-                                    if (prevObj != curObj)
+                                    double intLen = (double)dt.Rows[0]["L"];
+
+                                    if (intLen > gLen * 3 / 4 && intLen > 20)
+                                    {
+                                        okCnt++;
+                                        curObj = dt.Rows[0]["OBJECT_ID"].ToString();
+                                        if (prevObj != curObj)
+                                        {
+                                            if (prevObj != "")
+                                            {
+                                                spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
+                                                if (spd > MinV)
+                                                {
+                                                    rCnt++;
+                                                    Direction = GetDirection(startPoint, rawTrack[i - 1]);
+                                                    sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[i - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                                                }
+                                                else
+                                                {
+                                                    zCnt++;
+                                                }
+                                            }
+
+                                            // начало нового сегмента
+                                            tStart = rawTrack[i - 1].T;
+                                            startPoint = rawTrack[i - 1];
+                                            wLen = Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
+
+                                            prevObj = curObj;
+                                        }
+                                        else
+                                        {
+                                            // засчитываем сегмент
+                                            wLen += Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
+                                        }
+                                    }
+                                    else
                                     {
                                         if (prevObj != "")
                                         {
+
+                                            // уехали на улицу вне сети - записываем предыдущий сегмент
                                             spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
                                             if (spd > MinV)
                                             {
@@ -752,92 +788,84 @@ namespace IntersectionTest
                                                 zCnt++;
                                             }
                                         }
-
-                                        // начало нового сегмента
-                                        tStart = rawTrack[i - 1].T;
-                                        startPoint = rawTrack[i - 1];
-                                        wLen = Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
-
-                                        prevObj = curObj;
-                                    }
-                                    else
-                                    {
-                                        // засчитываем сегмент
-                                        wLen += Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
-                                    }
-
-                                }
-                                else if (dt.Rows.Count > 1)
-                                {
-                                    string objList = "";
-
-                                    if (prevObj != "")
-                                    {
-                                        bool prevFound = false;
-                                        for (int j = 0; j < dt.Rows.Count; j++)
-                                        {
-                                            if (j > 0)
-                                                objList += ",";
-                                            objList += dt.Rows[j]["OBJECT_ID"].ToString();
-
-                                            if (dt.Rows[j]["OBJECT_ID"].ToString() == prevObj)
-                                            {
-                                                // есть вероятность, что все еще едем по той же улице
-                                                // засчитываем сегмент
-                                                wLen += Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
-                                                okCnt++;
-                                                prevFound = true;
-                                                break;
-                                         
-                                            }
-                                        }
-
-                                        if (!prevFound)
-                                        {
-                                            // уехали на другую улицу - записываем
-
-                                            spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
-                                            if (spd > MinV)
-                                            {
-                                                rCnt++;
-                                                Direction = GetDirection(startPoint, rawTrack[i - 1]);
-                                                sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[i - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
-                                            }
-                                            else
-                                            {
-                                                zCnt++;
-                                            }
-
-
-
-                                            // нет однозначности куда поехали
-                                            // пробуем найти ближайшее
-
-                                            DataTable dt2 = new DataTable();
-                                            SqlCommand cmd = new SqlCommand();
-                                            cmd.Connection = cn;
-                                            cmd.CommandText = @"SELECT top ( 1 ) OBJECT_ID, DATA.STDistance('" + geom +"') FROM UDS where object_id in(" + objList + ")  order by DATA.STDistance('" + geom + "')";
-                                            SqlDataAdapter sda = new SqlDataAdapter(cmd);
-                                            sda.Fill(dt2);
-                                            sda.Dispose();
-                                            cmd.Dispose();
-
-                                            prevObj = dt2.Rows[0]["OBJECT_ID"].ToString();
-                                            tStart = rawTrack[i].T;
-                                            wLen = 0;
-                                            startPoint = rawTrack[i];
-                                            okCnt++;
-                                            dt2.Dispose();
-                                        }
-                                    }
-                                    else
-                                    {
-
+                                        //tStart = rawTrack[i].T;
+                                        //wLen = 0;
+                                        prevObj = "";
                                         skipCnt++;
                                     }
 
-
                                 }
+                                //else if (dt.Rows.Count > 1)
+                                //{
+                                //    string objList = "";
+
+                                //    if (prevObj != "")
+                                //    {
+                                //        bool prevFound = false;
+                                //        for (int j = 0; j < dt.Rows.Count; j++)
+                                //        {
+                                //            if (j > 0)
+                                //                objList += ",";
+                                //            objList += dt.Rows[j]["OBJECT_ID"].ToString();
+
+                                //            if (dt.Rows[j]["OBJECT_ID"].ToString() == prevObj)
+                                //            {
+                                //                // есть вероятность, что все еще едем по той же улице
+                                //                // засчитываем сегмент
+                                //                wLen += Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
+                                //                okCnt++;
+                                //                prevFound = true;
+                                //                break;
+                                         
+                                //            }
+                                //        }
+
+                                //        if (!prevFound)
+                                //        {
+                                //            // уехали на другую улицу - записываем
+
+                                //            spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
+                                //            if (spd > MinV)
+                                //            {
+                                //                rCnt++;
+                                //                Direction = GetDirection(startPoint, rawTrack[i - 1]);
+                                //                sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[i - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                                //            }
+                                //            else
+                                //            {
+                                //                zCnt++;
+                                //            }
+
+
+
+                                //            // нет однозначности куда поехали
+                                //            // пробуем найти ближайшее
+
+                                //            DataTable dt2 = new DataTable();
+                                //            SqlCommand cmd = new SqlCommand();
+                                //            cmd.Connection = cn;
+                                //            cmd.CommandText = @"SELECT top ( 1 ) OBJECT_ID, DATA.STDistance('" + geom +"') FROM UDS where object_id in(" + objList + ")  order by DATA.STDistance('" + geom + "')";
+                                //            SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                                //            sda.Fill(dt2);
+                                //            sda.Dispose();
+                                //            cmd.Dispose();
+
+                                //            prevObj = dt2.Rows[0]["OBJECT_ID"].ToString();
+                                //            tStart = rawTrack[i].T;
+                                //            wLen = 0;
+                                //            startPoint = rawTrack[i];
+                                //            okCnt++;
+                                //            dt2.Dispose();
+                                //        }
+                                //    }
+                                //    else
+                                //    {
+
+                                //        skipCnt++;
+                                //    }
+
+
+                                //}
                                 else // row.count=0 !!!
                                 {
 
@@ -977,9 +1005,10 @@ namespace IntersectionTest
             lblCnt.Text = "Поездок:" + fCnt.ToString() +"\r\nВ очереди: " + ACount.ToString() + "\r\nОбработано: " + FinishedCount.ToString();
 
             lblCnt.Text +="\r\n* Сегменты *\r\nДопущено=" + okCnt.ToString() +
-                 "\r\nContains = " + cQryCnt.ToString() + "\r\nIntersects = " + iQryCnt.ToString() +
                  "\r\nПропущено=" + skipCnt.ToString() + "\r\nV<Min=" + zCnt.ToString() + "\r\nЗафиксировано=" + rCnt.ToString();
-            
+
+            //  "\r\nContains = " + cQryCnt.ToString() + "\r\nIntersects = " + iQryCnt.ToString() +
+
             Application.DoEvents();
             
             if (ACount == 0)
