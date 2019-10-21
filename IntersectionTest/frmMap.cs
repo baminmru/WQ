@@ -155,115 +155,21 @@ namespace IntersectionTest
 
             ProjNet.CoordinateSystems.Transformations.CoordinateTransformationFactory ctFact = new ProjNet.CoordinateSystems.Transformations.CoordinateTransformationFactory();
 
-            
 
+            DirectoryInfo ldi = new DirectoryInfo(Application.StartupPath + "/UDS");
+            foreach (FileInfo fi in ldi.GetFiles("*.shp"))
+            {
 
-            //Application.StartupPath
-            VectorLayer streets = (VectorLayer)CreateLayer(Application.StartupPath+"/UDS/gr.shp", new VectorStyle { Line = new Pen(Color.Red) });
-
-
-            VectorLayer kad = (VectorLayer)CreateLayer(Application.StartupPath + "/UDS/gr_KAD_ZSD.shp", new VectorStyle { Line = new Pen(Color.OrangeRed) });
-
-            streets.CoordinateTransformation = ctFact.CreateFromCoordinateSystems(kga, webmercator);
-            streets.ReverseCoordinateTransformation = ctFact.CreateFromCoordinateSystems(webmercator, kga);
-
-            kad.CoordinateTransformation = ctFact.CreateFromCoordinateSystems(kga, webmercator);
-            kad.ReverseCoordinateTransformation = ctFact.CreateFromCoordinateSystems(webmercator, kga);
-
-
-            //var kga2wgs84 =ctFact.CreateFromCoordinateSystems(kga, wgs84);
-
-            //     SharpMap.Data.Providers.ShapeFile provider = (SharpMap.Data.Providers.ShapeFile)kad.DataSource;
-
-            //     int fc = provider.GetFeatureCount();
-            //     StringBuilder sb = new StringBuilder();
-
-
-
-            //     for (uint i = 0; i < fc; i++)
-            //     {
-            //string s = @"INSERT INTO UDS ([OBJECT_ID] ,[FID_GRAPH] ,[NAME] ,[UTOCH] ,[NAME_SHORT] ,[TITUL] ,[BBOX] ,[DATA]) VALUES (";
-
-            //        FeatureDataRow fdr = provider.GetFeature(i);
-
-            //         s = s + fdr["OBJECT_ID"].ToString();
-            //         s = s + ","+ fdr["FID_GRAPH"].ToString();
-            //    s = s + ",'" + fdr["NAME2"].ToString() +"'";
-            //    s = s + ",'" + fdr["UTOCH"].ToString() + "'";
-            //    s = s + ",'" + fdr["NAME_SHORT"].ToString() + "'";
-            //    s = s + ",'" + fdr["TITUL"].ToString() + "'";
-
-
-
-
-
-            //         //foreach (DataColumn dc in fdr.Table.Columns)
-            //         //{
-            //         //    System.Diagnostics.Debug.Print(dc.ColumnName);
-            //         //    System.Diagnostics.Debug.Print(fdr[dc.ColumnName].ToString());
-            //         //}
-
-            //         IGeometry g = fdr.Geometry;
-            //         //System.Diagnostics.Debug.Print(g.GeometryType + ":");
-
-            //         CultureInfo ci = new CultureInfo("en-US");
-            //         string b;
-            //         b = "'MULTIPOINT(";
-            //         bool isFirst = true;
-            //         foreach (GeoPoint gp in g.Boundary.Coordinates)
-            //         {
-            //             GeoPoint gpt = kga2wgs84.MathTransform.Transform(gp);
-            //             if (!isFirst)
-            //                 b += ",";
-            //             b += "(" + gpt.X.ToString("0.0000000000", ci) +" " + gpt.Y.ToString("0.0000000000", ci) +")";
-            //             isFirst = false;
-
-            //         }
-            //         b += ")'";
-            //         s = s + "," + b;
-
-
-
-            //         string l;
-            //         l = "'LINESTRING(";
-            //         isFirst = true;
-            //         foreach (GeoPoint gp in g.Coordinates)
-            //         {
-            //             GeoPoint gpt = kga2wgs84.MathTransform.Transform(gp);
-            //             if (!isFirst)
-            //                 l += ",";
-            //             l +=  gpt.X.ToString("0.0000000000", ci) + " " + gpt.Y.ToString("0.0000000000", ci) ;
-            //             isFirst = false;
-
-            //         }
-            //         l += ")'";
-            //         s = s + "," + l;
-
-            //         s = s + ");";
-            //     sb.AppendLine(s);
-            //     }
-
-            //     File.WriteAllText(Application.StartupPath + "/UDS/kad.sql", sb.ToString());
-
-            SaveLayer( "kad",kad);
-            SaveLayer("uds", streets);
-
-
-            this.mapBox1.Map.Layers.Add(streets);
-            this.mapBox1.Map.Layers.Add(kad);
-
+                VectorLayer streets = (VectorLayer)CreateLayer(fi.FullName, new VectorStyle { Line = new Pen(Color.Red) });
+                streets.CoordinateTransformation = ctFact.CreateFromCoordinateSystems(kga, webmercator);
+                streets.ReverseCoordinateTransformation = ctFact.CreateFromCoordinateSystems(webmercator, kga);
+                SaveLayer(fi.Name, streets);
+                this.mapBox1.Map.Layers.Add(streets);
+            }
             this.mapBox1.Map.ZoomToBox(geom);
             
             this.mapBox1.Refresh();
             this.mapBox1.ActiveTool= MapBox.Tools.Pan;
-
-
-
-
-
-
-
-
         }
 
 
@@ -295,7 +201,7 @@ namespace IntersectionTest
 
             for (uint i = 0; i < fc; i++)
             {
-                string s = @"INSERT INTO UDS ([OBJECT_ID] ,[FID_GRAPH] ,[NAME] ,[UTOCH] ,[NAME_SHORT] ,[TITUL] ,[BBOX] ,[DATA]) VALUES (";
+                string s = @"INSERT INTO UDS ([OBJECT_ID] ,[FID_GRAPH] ,[NAME] ,[UTOCH] ,[NAME_SHORT] ,[TITUL],[LAYER] ,[BBOX] ,[DATA]) VALUES (";
 
                 FeatureDataRow fdr = provider.GetFeature(i);
 
@@ -305,6 +211,7 @@ namespace IntersectionTest
                 s = s + ",'" + fdr["UTOCH"].ToString() + "'";
                 s = s + ",'" + fdr["NAME_SHORT"].ToString() + "'";
                 s = s + ",'" + fdr["TITUL"].ToString() + "'";
+                s = s + ",'" + name + "'";
 
 
 

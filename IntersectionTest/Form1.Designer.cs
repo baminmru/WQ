@@ -180,8 +180,8 @@
             this.txtCN.Name = "txtCN";
             this.txtCN.Size = new System.Drawing.Size(309, 20);
             this.txtCN.TabIndex = 8;
-            this.txtCN.Text = "Server=localhost\\sqlexpress;Database=WQ;Trusted_Connection=True;MultipleActiveRes" +
-    "ultSets=true;";
+            this.txtCN.Text = "Server=localhost;Database=WQ;Trusted_Connection=True;MultipleActiveResultSets=tru" +
+    "e;";
             // 
             // button2
             // 

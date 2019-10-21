@@ -31,7 +31,6 @@
             this.components = new System.ComponentModel.Container();
             this.mapBox1 = new SharpMap.Forms.MapBox();
             this.mapZoomToolStrip1 = new SharpMap.Forms.ToolBar.MapZoomToolStrip(this.components);
-            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // mapBox1
@@ -43,7 +42,7 @@
             this.mapBox1.Cursor = System.Windows.Forms.Cursors.Default;
             this.mapBox1.CustomTool = null;
             this.mapBox1.FineZoomFactor = 10D;
-            this.mapBox1.Location = new System.Drawing.Point(6, 60);
+            this.mapBox1.Location = new System.Drawing.Point(6, 28);
             this.mapBox1.MapQueryMode = SharpMap.Forms.MapBox.MapQueryType.LayerByIndex;
             this.mapBox1.Name = "mapBox1";
             this.mapBox1.QueryGrowFactor = 5F;
@@ -51,7 +50,7 @@
             this.mapBox1.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
             this.mapBox1.SelectionForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
             this.mapBox1.ShowProgressUpdate = false;
-            this.mapBox1.Size = new System.Drawing.Size(782, 378);
+            this.mapBox1.Size = new System.Drawing.Size(782, 410);
             this.mapBox1.TabIndex = 0;
             this.mapBox1.Text = "mapBox1";
             this.mapBox1.WheelZoomMagnitude = -2D;
@@ -66,22 +65,11 @@
             this.mapZoomToolStrip1.TabIndex = 1;
             this.mapZoomToolStrip1.Text = "mapZoomToolStrip1";
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(14, 32);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(109, 28);
-            this.button1.TabIndex = 2;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.Button1_Click);
-            // 
             // frmMap
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.button1);
             this.Controls.Add(this.mapZoomToolStrip1);
             this.Controls.Add(this.mapBox1);
             this.Name = "frmMap";
@@ -97,6 +85,5 @@
 
         private SharpMap.Forms.MapBox mapBox1;
         private SharpMap.Forms.ToolBar.MapZoomToolStrip mapZoomToolStrip1;
-        private System.Windows.Forms.Button button1;
     }
 }

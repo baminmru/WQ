@@ -33,7 +33,7 @@ namespace IntersectionTest
 
 
         private static object optLocker = new object();
-        private static object jsonLocker = new object();
+        //private static object jsonLocker = new object();
         // private static string header=@"""TrackID"";""RecordTime"";""N"";""E"";""Velocity"";""Marker""";
         public Form1()
         {
@@ -242,8 +242,8 @@ namespace IntersectionTest
 
                     startTime = DateTime.Now;
 
-                    ThreadPool.SetMinThreads(12, 0);
-                    ThreadPool.SetMaxThreads(20, 0);
+                    ThreadPool.SetMinThreads(20, 0);
+                    ThreadPool.SetMaxThreads(40, 0);
 
                     foreach (FileInfo fi2 in di.GetFiles("*.csv"))
                     {
@@ -974,8 +974,8 @@ namespace IntersectionTest
   
                 startTime = DateTime.Now;
 
-                ThreadPool.SetMinThreads(12, 0);
-                ThreadPool.SetMaxThreads(20, 0);
+                ThreadPool.SetMinThreads(20, 0);
+                ThreadPool.SetMaxThreads(40, 0);
 
                 foreach (FileInfo fi in di.GetFiles("*.csv"))
                 {

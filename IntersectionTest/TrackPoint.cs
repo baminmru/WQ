@@ -15,16 +15,16 @@ namespace IntersectionTest
         public DateTime T { get; set; }
         
 
-        public string LINKTO { get; set; }
+        //public string LINKTO { get; set; }
 
-        public double WAY { get; set; }
+        //public double WAY { get; set; }
 
-        public double SPD { get; set; }
+        //public double SPD { get; set; }
 
         public TrackPoint() {
-            WAY = 0.0;
-            SPD = 0.0;
-            LINKTO = "";
+            //WAY = 0.0;
+            //SPD = 0.0;
+            //LINKTO = "";
         }
 
         public TrackPoint(TrackPoint t) {
@@ -32,9 +32,9 @@ namespace IntersectionTest
             Y = t.Y;
             V = t.V;
             T = t.T;
-            LINKTO = t.LINKTO;
-            WAY = t.WAY;
-            SPD = t.SPD;
+            //LINKTO = t.LINKTO;
+            //WAY = t.WAY;
+            //SPD = t.SPD;
         }
 
         bool IEquatable<TrackPoint>.Equals(TrackPoint other)
