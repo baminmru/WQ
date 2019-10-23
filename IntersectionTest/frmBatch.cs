@@ -57,15 +57,28 @@ namespace IntersectionTest
                     MessageBox.Show("Connection test error", "Wrong parameters");
                     return;
                 }
-                timer1.Enabled = true;
+               
+                
+                BatchOperations.Folder = txtFolder.Text;
+                BatchOperations.CN = txtCN.Text;
+
                 cmdStart.Enabled = false;
                 txtCN.Enabled = false;
                 txtWildcard.Enabled = false;
                 cmdSelectFolder.Enabled = false;
-                
-                BatchOperations.Folder = txtFolder.Text;
-                BatchOperations.CN = txtCN.Text;
-                BatchOperations.ProcessFolder(txtWildcard.Text);
+                if (BatchOperations.ProcessFolder(txtWildcard.Text))
+                {
+                    timer1.Enabled = true;
+                    
+                }
+                else
+                {
+                    cmdStart.Enabled = true;
+                    txtCN.Enabled = true;
+                    txtWildcard.Enabled = true;
+                    txtWildcard.Text="No files - " + txtWildcard.Text;
+                    cmdSelectFolder.Enabled = true;
+                }
 
             }
             else
@@ -83,8 +96,8 @@ namespace IntersectionTest
             string s = "";
             if (BatchOperations.StartTime == DateTime.MinValue){
 
-                s = "Processing File: " + BatchOperations.fCur.ToString() + " of (" + BatchOperations.fCnt.ToString() + ")"
-                    + "\r\nLines read: " + BatchOperations.lCnt.ToString();
+                s = "Processing File: " + BatchOperations.fCur.ToString() + " of (" + BatchOperations.fCnt.ToString() + "). Finished: " + BatchOperations.fDone.ToString()
+                    + "\r\nLines read: " + BatchOperations.lCnt.ToString("N0");
             }
             else
             {
@@ -92,15 +105,26 @@ namespace IntersectionTest
                 TimeSpan ts = cur - BatchOperations.StartTime;
                 if (ts.TotalSeconds > 0)
                 {
-                    s = "Processing File: " + BatchOperations.fCur.ToString() + " of (" + BatchOperations.fCnt.ToString() + ")"
-                    + "\r\nLines read: " + BatchOperations.lCnt.ToString()
-                    + "\r\nCar: " + BatchOperations.tCur.ToString() + " of (" + BatchOperations.tCnt.ToString() + ")" + " CpS =" + (BatchOperations.tCur / ts.TotalSeconds).ToString("0.00")
-                    + "\r\nTrips: " + BatchOperations.dCur.ToString() + " TpS =" + (BatchOperations.dCur / ts.TotalSeconds).ToString("0.00")
-                    + "\r\nRecords=" + BatchOperations.ACount.ToString();
+                    s = "Processing File: " + BatchOperations.fCur.ToString() + " of (" + BatchOperations.fCnt.ToString() + "). Finished: " + BatchOperations.fDone.ToString()
+                    + "\r\nLines read: " + BatchOperations.lCnt.ToString("N0")
+                    + "\r\nCar: " + BatchOperations.tCur.ToString("N0") + " of (" + BatchOperations.tCnt.ToString("N0") + ")" + ". Car Per Second =" + (BatchOperations.tCur / ts.TotalSeconds).ToString("0.00")
+                    + "\r\nTrips: " + BatchOperations.dCur.ToString("N0") + ". Trip Per Second =" + (BatchOperations.dCur / ts.TotalSeconds).ToString("0.00")
+                    + "\r\nRecords=" + BatchOperations.ACount.ToString("N0");
                  
                 }
             }
             txtLog.Text = s;
+
+            if(BatchOperations.fCnt >0 && BatchOperations.fDone== BatchOperations.fCnt)
+            {
+                timer1.Enabled = false;
+                cmdStart.Enabled = true;
+                txtCN.Enabled = true;
+                txtWildcard.Enabled = true;
+                txtWildcard.Text="DONE-" + txtWildcard.Text;
+                cmdSelectFolder.Enabled = true;
+
+            }
             Application.DoEvents();
         }
     }

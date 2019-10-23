@@ -33,6 +33,7 @@ namespace IntersectionTest
         public static Int64 tCur = 0;
         public static Int64 fCnt = 0;
         public static Int64 fCur = 0;
+        public static Int64 fDone = 0;
         public static Int64 dCnt = 0;
         public static Int64 dCur = 0;
 
@@ -167,9 +168,10 @@ namespace IntersectionTest
                 Reorg.Clear();
 
             }
+            fDone++;
         }
 
-        private static void ProcessZip(object zipName)
+        private static void ProcessFile(object zipName)
         {
 
             string zName = (string)zipName;
@@ -183,6 +185,7 @@ namespace IntersectionTest
                 // process zip file
                 if (zName.ToLower().EndsWith(".zip"))
                 {
+                    logger.Info("Processing as ZIP file");
                     using (var zip = new ZipArchive(file, ZipArchiveMode.Read))
                     {
                         foreach (var entry in zip.Entries)
@@ -195,6 +198,7 @@ namespace IntersectionTest
                 // process gzip file
                 if (zName.ToLower().EndsWith(".gzip"))
                 {
+                    logger.Info("Processing as GZIP file");
                     using (var zipStream = new GZipStream(file, CompressionMode.Decompress))
                     {
                         PorcessStream(zipStream);
@@ -204,24 +208,36 @@ namespace IntersectionTest
                 // process unpacked csv file
                 if (zName.ToLower().EndsWith(".csv"))
                 {
+                    logger.Info("Processing as CSV file");
                     PorcessStream(file);
                 }
             }
         }
 
 
-        public static void ProcessFolder(string Wildcard)
+        public static bool ProcessFolder(string Wildcard)
         {
             DirectoryInfo di = new DirectoryInfo(Folder);
             FileInfo[] files = di.GetFiles(Wildcard);
-            ThreadPool.SetMinThreads(7, 0);
-            ThreadPool.SetMaxThreads(12, 0);
-            StartTime = DateTime.MinValue;
             fCnt = files.Length;
-            fCur = 0;
-            foreach (FileInfo fi in files)
+
+            if (fCnt > 0)
             {
-                ThreadPool.QueueUserWorkItem(ProcessZip, (object) fi.FullName);
+
+                ThreadPool.SetMinThreads(7, 0);
+                ThreadPool.SetMaxThreads(12, 0);
+                StartTime = DateTime.MinValue;
+
+                fCur = 0;
+                foreach (FileInfo fi in files)
+                {
+                    ThreadPool.QueueUserWorkItem(ProcessFile, (object)fi.FullName);
+                }
+                return true;
+            }
+            else
+            {
+                return false;
             }
             
         }
