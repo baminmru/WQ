@@ -38,6 +38,8 @@
             this.cmdSelectFolder = new System.Windows.Forms.Button();
             this.cmdStart = new System.Windows.Forms.Button();
             this.txtLog = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.txtWildcard = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // timer1
@@ -48,7 +50,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 14);
+            this.label1.Location = new System.Drawing.Point(13, 14);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(92, 13);
             this.label1.TabIndex = 0;
@@ -87,9 +89,9 @@
             // cmdSelectFolder
             // 
             this.cmdSelectFolder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cmdSelectFolder.Location = new System.Drawing.Point(519, 46);
+            this.cmdSelectFolder.Location = new System.Drawing.Point(519, 41);
             this.cmdSelectFolder.Name = "cmdSelectFolder";
-            this.cmdSelectFolder.Size = new System.Drawing.Size(35, 19);
+            this.cmdSelectFolder.Size = new System.Drawing.Size(35, 28);
             this.cmdSelectFolder.TabIndex = 4;
             this.cmdSelectFolder.Text = "...";
             this.cmdSelectFolder.UseVisualStyleBackColor = true;
@@ -97,7 +99,8 @@
             // 
             // cmdStart
             // 
-            this.cmdStart.Location = new System.Drawing.Point(18, 88);
+            this.cmdStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cmdStart.Location = new System.Drawing.Point(368, 80);
             this.cmdStart.Name = "cmdStart";
             this.cmdStart.Size = new System.Drawing.Size(186, 34);
             this.cmdStart.TabIndex = 5;
@@ -118,11 +121,32 @@
             this.txtLog.Size = new System.Drawing.Size(538, 154);
             this.txtLog.TabIndex = 6;
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(13, 91);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(52, 13);
+            this.label3.TabIndex = 7;
+            this.label3.Text = "Wildcard:";
+            // 
+            // txtWildcard
+            // 
+            this.txtWildcard.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtWildcard.Location = new System.Drawing.Point(122, 88);
+            this.txtWildcard.Name = "txtWildcard";
+            this.txtWildcard.Size = new System.Drawing.Size(232, 20);
+            this.txtWildcard.TabIndex = 8;
+            this.txtWildcard.Text = "*.zip";
+            // 
             // frmBatch
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(567, 311);
+            this.Controls.Add(this.txtWildcard);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.txtLog);
             this.Controls.Add(this.cmdStart);
             this.Controls.Add(this.cmdSelectFolder);
@@ -149,5 +173,7 @@
         private System.Windows.Forms.Button cmdSelectFolder;
         private System.Windows.Forms.Button cmdStart;
         private System.Windows.Forms.TextBox txtLog;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox txtWildcard;
     }
 }

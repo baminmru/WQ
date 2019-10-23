@@ -46,148 +46,179 @@ namespace IntersectionTest
         public static string CN;
         public static string Folder;
 
-        private static void ProcessZip(object zipName)
+
+
+        private static void PorcessStream(Stream data)
         {
-            using (var file = File.OpenRead((string)zipName))
+            Dictionary<string, List<TrackPoint>> Reorg = new Dictionary<string, List<TrackPoint>>();
+            using (StreamReader stream = new StreamReader(data))
             {
-                fCur++;
-                using (var zip = new ZipArchive(file, ZipArchiveMode.Read))
+                string TrackID = "";
+
+                Double N = 0.0, E = 0.0, V = 0.0;
+                DateTime d;
+
+               
+
+                Total = 0;
+                while (stream.Peek() >= 0)
                 {
-                    foreach (var entry in zip.Entries)
+                    string s = stream.ReadLine();
+                    string[] cols = s.Split(';');
+                    if (cols.Length >= 8)
                     {
+                        TrackID = cols[0];
+                        if (cols[4].Contains(","))
+                            N = Double.Parse(cols[4], ciRus);
+                        else
+                            N = Double.Parse(cols[4], ci);
+                        if (cols[5].Contains(","))
+                            E = Double.Parse(cols[5], ciRus);
+                        else
+                            E = Double.Parse(cols[5], ci);
 
-                        Dictionary<string, List<TrackPoint>> Reorg = new Dictionary<string, List<TrackPoint>>();
+                        if (cols[6].Contains(","))
+                            V = Double.Parse(cols[6], ciRus);
+                        else
+                            V = Double.Parse(cols[6], ci);
+                        N = N * 180 / Math.PI;
+                        E = E * 180 / Math.PI;
 
-                        using (StreamReader stream = new StreamReader(entry.Open()))
+                        d = DateTime.MinValue;
+
+                        if (cols[3].Length == 23)
                         {
-                            string TrackID = "";
-
-                            Double N = 0.0, E = 0.0, V = 0.0;
-                            DateTime d;
-
-                            logger.Info("Read tracks from " + entry.FullName);
-                           
-                            Total = 0;
-                            while (stream.Peek() >= 0)
+                            try
                             {
-                                string s = stream.ReadLine();
-                                string[] cols = s.Split(';');
-                                if (cols.Length >= 8)
-                                {
-                                    TrackID = cols[0];
-                                    if (cols[4].Contains(","))
-                                        N = Double.Parse(cols[4], ciRus);
-                                    else
-                                        N = Double.Parse(cols[4], ci);
-                                    if (cols[5].Contains(","))
-                                        E = Double.Parse(cols[5], ciRus);
-                                    else
-                                        E = Double.Parse(cols[5], ci);
-
-                                    if (cols[6].Contains(","))
-                                        V = Double.Parse(cols[6], ciRus);
-                                    else
-                                        V = Double.Parse(cols[6], ci);
-                                    N = N * 180 / Math.PI;
-                                    E = E * 180 / Math.PI;
-
-                                    d = DateTime.MinValue;
-
-                                    if (cols[3].Length == 23)
-                                    {
-                                        try
-                                        {
-                                            d = DateTime.ParseExact(cols[3], "yyyy-MM-dd HH:mm:ss.fff", ci);
-                                        }
-                                        catch
-                                        {
-                                        }
-                                    }
-                                    else
-                                    {
-                                        try
-                                        {
-                                            d = DateTime.ParseExact(cols[3], "yyyy-MM-dd HH:mm:ss", ci);
-                                        }
-                                        catch
-                                        {
-                                        }
-                                    }
-
-                                    TrackPoint tp = new TrackPoint() { X = E, Y = N, V = V, T = d };
-
-                                    if (Reorg.ContainsKey(TrackID))
-                                    {
-                                        Reorg[TrackID].Add(tp);
-                                    }
-                                    else
-                                    {
-                                        List<TrackPoint> newList = new List<TrackPoint>();
-                                        newList.Add(tp);
-                                        Reorg.Add(TrackID, newList);
-                                    }
-                                }
-                                Total++;
-                                lCnt++;
-
+                                d = DateTime.ParseExact(cols[3], "yyyy-MM-dd HH:mm:ss.fff", ci);
                             }
-
-
-                            Total = 0;
-                            Dictionary<string, List<TrackPoint>> optimized;
-                            if(StartTime == DateTime.MinValue)
+                            catch
                             {
-                                StartTime = DateTime.Now;
                             }
-
-                            tCnt += Reorg.Keys.Count;
-
-                            foreach (string s in Reorg.Keys)
+                        }
+                        else
+                        {
+                            try
                             {
-                              
-                                tCur++;
-                                logger.Info("Optimizing " + s);
-                                optimized = AnalizeTrack(Reorg[s], s);
-                                dCnt += optimized.Keys.Count;
-
-
-                                foreach (string sOpt in optimized.Keys)
-                                {
-                                   
-                                    logger.Info("Linking " + s);
-
-                                    List<LinkObject> lnk;
-                                    lnk = LinkFile(CN, sOpt, optimized[sOpt]);
-                                    if (lnk.Count > 0)
-                                    {
-                                        logger.Info("Saving inks: " + sOpt);
-                                     
-                                        Save2DB(CN, lnk);
-                                        lnk.Clear();
-                                    }
-                                    dCur++;
-                                }
-
-                                optimized.Clear();
-
+                                d = DateTime.ParseExact(cols[3], "yyyy-MM-dd HH:mm:ss", ci);
                             }
-                            Reorg.Clear();
+                            catch
+                            {
+                            }
+                        }
 
+                        TrackPoint tp = new TrackPoint() { X = E, Y = N, V = V, T = d };
+
+                        if (Reorg.ContainsKey(TrackID))
+                        {
+                            Reorg[TrackID].Add(tp);
+                        }
+                        else
+                        {
+                            List<TrackPoint> newList = new List<TrackPoint>();
+                            newList.Add(tp);
+                            Reorg.Add(TrackID, newList);
                         }
                     }
+                    Total++;
+                    lCnt++;
+
+                }
+
+
+                Total = 0;
+                Dictionary<string, List<TrackPoint>> optimized;
+                if (StartTime == DateTime.MinValue)
+                {
+                    StartTime = DateTime.Now;
+                }
+
+                tCnt += Reorg.Keys.Count;
+
+                foreach (string s in Reorg.Keys)
+                {
+                    tCur++;
+                    logger.Info("Optimizing " + s);
+                    optimized = AnalizeTrack(Reorg[s], s);
+                    dCnt += optimized.Keys.Count;
+
+                    logger.Info("Linking " + s);
+
+                    foreach (string sOpt in optimized.Keys)
+                    {
+
+                        List<LinkObject> lnk;
+                        lnk = LinkFile(CN, sOpt, optimized[sOpt]);
+                        if (lnk.Count > 0)
+                        {
+                            logger.Info("Saving: " + sOpt);
+
+                            Save2DB(CN, lnk);
+                            lnk.Clear();
+                        }
+                        dCur++;
+                        optimized[sOpt].Clear();
+                    }
+
+                    optimized.Clear();
+                    Reorg[s].Clear();
+
+                }
+                Reorg.Clear();
+
+            }
+        }
+
+        private static void ProcessZip(object zipName)
+        {
+
+            string zName = (string)zipName;
+
+            using (var file = File.OpenRead(zName))
+            {
+                fCur++;
+
+                logger.Info("Reading tracks from " + zName);
+
+                // process zip file
+                if (zName.ToLower().EndsWith(".zip"))
+                {
+                    using (var zip = new ZipArchive(file, ZipArchiveMode.Read))
+                    {
+                        foreach (var entry in zip.Entries)
+                        {
+                            PorcessStream(entry.Open());
+                        }
+                    }
+                }
+
+                // process gzip file
+                if (zName.ToLower().EndsWith(".gzip"))
+                {
+                    using (var zipStream = new GZipStream(file, CompressionMode.Decompress))
+                    {
+                        PorcessStream(zipStream);
+                    }
+                }
+
+                // process unpacked csv file
+                if (zName.ToLower().EndsWith(".csv"))
+                {
+                    PorcessStream(file);
                 }
             }
         }
 
 
-        public static void ProcessFolder()
+        public static void ProcessFolder(string Wildcard)
         {
             DirectoryInfo di = new DirectoryInfo(Folder);
-            FileInfo[] files = di.GetFiles("*.zip");
+            FileInfo[] files = di.GetFiles(Wildcard);
             ThreadPool.SetMinThreads(7, 0);
             ThreadPool.SetMaxThreads(12, 0);
             StartTime = DateTime.MinValue;
             fCnt = files.Length;
+            fCur = 0;
             foreach (FileInfo fi in files)
             {
                 ThreadPool.QueueUserWorkItem(ProcessZip, (object) fi.FullName);

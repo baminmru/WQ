@@ -42,7 +42,7 @@ namespace IntersectionTest
 
         private void cmdStart_Click(object sender, EventArgs e)
         {
-            if(txtCN.Text !="" && txtFolder.Text != "")
+            if(txtCN.Text !="" && txtFolder.Text != "" && txtWildcard.Text != "")
             {
                 SqlConnection cn = new SqlConnection(txtCN.Text);
                 try
@@ -60,16 +60,17 @@ namespace IntersectionTest
                 timer1.Enabled = true;
                 cmdStart.Enabled = false;
                 txtCN.Enabled = false;
+                txtWildcard.Enabled = false;
                 cmdSelectFolder.Enabled = false;
                 
                 BatchOperations.Folder = txtFolder.Text;
                 BatchOperations.CN = txtCN.Text;
-                BatchOperations.ProcessFolder();
+                BatchOperations.ProcessFolder(txtWildcard.Text);
 
             }
             else
             {
-                MessageBox.Show("Folder or Connection is empty.", "Wrong parameters");
+                MessageBox.Show("Folder,Wildcard or Connection is empty.", "Wrong parameters");
                 return;
             }
 
