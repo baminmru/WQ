@@ -13,7 +13,7 @@ namespace IntersectionTest
         public Double V { get; set; }
 
         public DateTime T { get; set; }
-        
+
 
         //public string LINKTO { get; set; }
 

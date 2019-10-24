@@ -15,5 +15,7 @@ namespace IntersectionTest
 
         public DateTime T { get; set; }
 
+        public double SECONDS { get; set; }
+
     }
 }

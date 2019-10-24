@@ -224,8 +224,8 @@ namespace IntersectionTest
             if (fCnt > 0)
             {
 
-                ThreadPool.SetMinThreads(7, 0);
-                ThreadPool.SetMaxThreads(12, 0);
+                ThreadPool.SetMinThreads(15, 0);
+                ThreadPool.SetMaxThreads(16, 0);
                 StartTime = DateTime.MinValue;
 
                 fCur = 0;
@@ -446,10 +446,7 @@ namespace IntersectionTest
                                     //iQryCnt++;
                                     SqlCommand cmd = new SqlCommand();
                                     cmd.Connection = cn;
-                                    //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1";
-                                    //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STContains('" + geom + "') = 1";
-                                    //cmd.CommandText = @"SELECT OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 and geography::STGeomFromText( BUFFER.STIntersection('" + geom + "').ToString(),4326).STLength() > geography::STGeomFromText('" + geom + "',4326).STLength()/2";
-                                    cmd.CommandText = @"SELECT top(1) OBJECT_ID,  BUFFER.STIntersection('" + geom + "').STLength() L FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 order by   BUFFER.STIntersection('" + geom + "').STLength() desc"; // + (gLen/2).ToString(ci); // geography::STGeomFromText('" + geom + "',4326).STLength()/2";
+                                    cmd.CommandText = @"SELECT  OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 and BUFFER.STIntersection('" + geom + "').STLength() >=   SEGLENGTH  order by seglength desc"; 
                                     SqlDataAdapter sda = new SqlDataAdapter(cmd);
 
                                     try
@@ -469,9 +466,9 @@ namespace IntersectionTest
 
                                 if (dt.Rows.Count > 0)
                                 {
-                                    double intLen = (double)dt.Rows[0]["L"];
+                                    //double intLen = (double)dt.Rows[0]["L"];
 
-                                    if ( intLen > 8.98315e-5 * 3)
+                                    //if ( intLen > 8.98315e-5 * 3)
                                     {
                                        
                                         curObj = dt.Rows[0]["OBJECT_ID"].ToString();
@@ -490,7 +487,8 @@ namespace IntersectionTest
                                                         TrackID = LinkTtrackName,
                                                         Direction = Direction,
                                                         T = rawTrack[i - 1].T,
-                                                        V = spd
+                                                        V = spd,
+                                                        SECONDS = (rawTrack[i - 1].T-startPoint.T).TotalSeconds
                                                     });
                                                     //sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[i - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
                                                 }
@@ -510,34 +508,35 @@ namespace IntersectionTest
                                             wLen += Math.Abs((rawTrack[i - 1].T - rawTrack[i].T).TotalHours) * rawTrack[i].V;
                                         }
                                     }
-                                    else
-                                    {
-                                        if (prevObj != "")
-                                        {
+                                    //else
+                                    //{
+                                    //    if (prevObj != "")
+                                    //    {
 
-                                            // уехали на улицу вне сети - записываем предыдущий сегмент
-                                            spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
-                                            if (spd > MinV)
-                                            {
+                                    //        // уехали на улицу вне сети - записываем предыдущий сегмент
+                                    //        spd = (wLen / Math.Abs((rawTrack[i - 1].T - tStart).TotalHours));
+                                    //        if (spd > MinV)
+                                    //        {
                                                
-                                                Direction = GetDirection(startPoint, rawTrack[i - 1]);
-                                                links.Add(new LinkObject()
-                                                {
-                                                    ObjectID = prevObj,
-                                                    TrackID = LinkTtrackName,
-                                                    Direction = Direction,
-                                                    T = rawTrack[i - 1].T,
-                                                    V = spd
-                                                });
-                                                //sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[i - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
-                                            }
+                                    //            Direction = GetDirection(startPoint, rawTrack[i - 1]);
+                                    //            links.Add(new LinkObject()
+                                    //            {
+                                    //                ObjectID = prevObj,
+                                    //                TrackID = LinkTtrackName,
+                                    //                Direction = Direction,
+                                    //                T = rawTrack[i - 1].T,
+                                    //                V = spd,
+                                    //                SECONDS = (rawTrack[i - 1].T - startPoint.T).TotalSeconds
+                                    //            });
+                                    //            //sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[i - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
+                                    //        }
                                            
-                                        }
-                                        //tStart = rawTrack[i].T;
-                                        //wLen = 0;
-                                        prevObj = "";
+                                    //    }
+                                    //    //tStart = rawTrack[i].T;
+                                    //    //wLen = 0;
+                                    //    prevObj = "";
                                       
-                                    }
+                                    //}
 
                                 }
                                
@@ -559,7 +558,8 @@ namespace IntersectionTest
                                                 TrackID = LinkTtrackName,
                                                 Direction = Direction,
                                                 T = rawTrack[i - 1].T,
-                                                V = spd
+                                                V = spd,
+                                                SECONDS = (rawTrack[i - 1].T - startPoint.T).TotalSeconds
                                             });
                                            // sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[i - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
                                         }
@@ -586,7 +586,8 @@ namespace IntersectionTest
                                         TrackID = LinkTtrackName,
                                         Direction = Direction,
                                         T = rawTrack[rawTrack.Count - 1].T,
-                                        V = spd
+                                        V = spd,
+                                        SECONDS = (rawTrack[rawTrack.Count - 1].T - startPoint.T).TotalSeconds
                                     });
                                     //sb.AppendLine(prevObj + ";" + TrackID + ";" + Direction + ";" + rawTrack[rawTrack.Count - 1].T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + spd.ToString("#0.00", ci));
                                 }
@@ -638,13 +639,14 @@ namespace IntersectionTest
 
                     foreach (LinkObject l in records)
                     {
-                            string qry = @"INSERT INTO Track2OBJ([OBJECT_ID] ,[TRACK],[GPSTIME],[DIRECTION] ,[V])VALUES(" +
-                            l.ObjectID + ",'" + l.TrackID + "',convert(datetime,'" + l.T.ToString("yyyy-MM-dd HH:mm:ss") + "',121),'" + l.Direction + "'," + l.V.ToString("0.00", ci) + ")";
+                            string qry = @"INSERT INTO Track2OBJ([OBJECT_ID] ,[TRACK],[GPSTIME],[DIRECTION] ,[V],SECONDS)VALUES(" +
+                            l.ObjectID + ",'" + l.TrackID + "',convert(datetime,'" + l.T.ToString("yyyy-MM-dd HH:mm:ss") + "',121),'" + l.Direction + "'," + l.V.ToString("0.00", ci) +"," + l.SECONDS.ToString("0.0000", ci) + ")";
                             cmd.CommandText = qry;
                             try
                             {
-                                cmd.ExecuteNonQuery();
-                                ACount++;
+                            ACount++;
+                            cmd.ExecuteNonQuery();
+                           
                             }
                             catch (System.Exception ex)
                             {

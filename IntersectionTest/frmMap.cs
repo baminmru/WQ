@@ -196,12 +196,15 @@ namespace IntersectionTest
 
             int fc = provider.GetFeatureCount();
             StringBuilder sb = new StringBuilder();
+            StringBuilder sb2 = new StringBuilder();
 
 
 
             for (uint i = 0; i < fc; i++)
             {
                 string s = @"INSERT INTO UDS ([OBJECT_ID] ,[FID_GRAPH] ,[NAME] ,[UTOCH] ,[NAME_SHORT] ,[TITUL],[LAYER] ,[BBOX] ,[DATA]) VALUES (";
+
+                string u = @"update UDS set ";
 
                 FeatureDataRow fdr = provider.GetFeature(i);
 
@@ -214,6 +217,13 @@ namespace IntersectionTest
                 s = s + ",'" + name + "'";
 
 
+               
+                
+                u = u + "NAME='" + fdr["NAME2"].ToString() + "'";
+                u = u + ",UTOCH='" + fdr["UTOCH"].ToString() + "'";
+                u = u + ",NAME_SHORT='" + fdr["NAME_SHORT"].ToString() + "'";
+                u = u + ",TITUL='" + fdr["TITUL"].ToString() + "'";
+                u = u +" where OBJECT_ID="+ fdr["OBJECT_ID"].ToString()+";";
 
 
 
@@ -261,9 +271,11 @@ namespace IntersectionTest
 
                 s = s + ");";
                 sb.AppendLine(s);
+                sb2.AppendLine(u);
             }
 
             File.WriteAllText(Application.StartupPath + "/UDS/"+name+".sql", sb.ToString());
+            File.WriteAllText(Application.StartupPath + "/UDS/" + name + "_update.sql", sb2.ToString());
         }
 
         private static ILayer CreateLayer(string path, VectorStyle style)
