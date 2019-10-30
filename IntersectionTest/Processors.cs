@@ -295,21 +295,27 @@ namespace IntersectionTest
             index[n_dest] = n_source - 1;
             n_dest++;
             List<TrackPoint> r = new List<TrackPoint>();
+
             for (i = 0; i < n_dest; i++)
             {
+                //if (double.IsNaN(source[index[i]].V))
+                //{
+                //    System.Diagnostics.Debug.Print("!");
+                //}
+
                 if (i > 0)
                 {
                     if (index[i] > index[i - 1] + 1)
                     {
                         DateTime t1, t2;
 
+                        double ddd = 0;
                         
-                        d12 = 0;
                         for(int idx = index[i - 1]; idx < index[i]; idx++)
                         {
                             t2 = source[idx+1 ].T;
                             t1 = source[idx].T;
-                            d12 += source[idx+1].V * Math.Abs((t2 - t1).TotalHours);
+                            ddd += source[idx+1].V * Math.Abs((t2 - t1).TotalHours);
                             
                         }
 
@@ -319,18 +325,22 @@ namespace IntersectionTest
                         t1 = source[index[i - 1]].T;
                         t2 = source[index[i]].T;
                         double V;
-                        V= d12 / Math.Abs((t2 - t1).TotalHours);  
-                     
+                        if(Math.Abs((t2 - t1).TotalHours) == 0)
                         {
-                            source[index[i]].V = V;
-                            //source[index[i]].M = d12.ToString() + "/" + Math.Abs((t2 - t1).TotalSeconds).ToString();
+                            V = ddd / Math.Abs((t2 - t1).TotalHours);
                         }
-
+                        else
+                        {
+                            V = source[index[i]].V;
+                        }
                         
+                        source[index[i]].V = V;
+                        //source[index[i]].M = d12.ToString() + "/" + Math.Abs((t2 - t1).TotalSeconds).ToString();
 
                     }
                 }
-                r.Add(source[index[i]]);
+               
+                r.Add(new TrackPoint(source[index[i]]) );
             }
             return r;
         }

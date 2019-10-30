@@ -61,12 +61,15 @@ namespace IntersectionTest
                 
                 BatchOperations.Folder = txtFolder.Text;
                 BatchOperations.CN = txtCN.Text;
+                BatchOperations.SaveTo = txtSaveTo.Text;
+                BatchOperations.WithSubfolder = chkSubFolder.Checked;
 
                 cmdStart.Enabled = false;
                 txtCN.Enabled = false;
                 txtWildcard.Enabled = false;
                 cmdSelectFolder.Enabled = false;
-                if (BatchOperations.ProcessFolder(txtWildcard.Text))
+
+                if (BatchOperations.ProcessFolder(txtWildcard.Text,chkReorg.Checked))
                 {
                     timer1.Enabled = true;
                     

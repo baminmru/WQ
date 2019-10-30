@@ -40,6 +40,9 @@
             this.txtLog = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.txtWildcard = new System.Windows.Forms.TextBox();
+            this.chkReorg = new System.Windows.Forms.CheckBox();
+            this.txtSaveTo = new System.Windows.Forms.TextBox();
+            this.chkSubFolder = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // timer1
@@ -59,7 +62,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(13, 49);
+            this.label2.Location = new System.Drawing.Point(13, 40);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(62, 13);
             this.label2.TabIndex = 1;
@@ -80,7 +83,7 @@
             // 
             this.txtFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtFolder.Location = new System.Drawing.Point(122, 46);
+            this.txtFolder.Location = new System.Drawing.Point(122, 37);
             this.txtFolder.Name = "txtFolder";
             this.txtFolder.ReadOnly = true;
             this.txtFolder.Size = new System.Drawing.Size(390, 20);
@@ -89,7 +92,7 @@
             // cmdSelectFolder
             // 
             this.cmdSelectFolder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cmdSelectFolder.Location = new System.Drawing.Point(519, 41);
+            this.cmdSelectFolder.Location = new System.Drawing.Point(519, 32);
             this.cmdSelectFolder.Name = "cmdSelectFolder";
             this.cmdSelectFolder.Size = new System.Drawing.Size(35, 28);
             this.cmdSelectFolder.TabIndex = 4;
@@ -100,7 +103,7 @@
             // cmdStart
             // 
             this.cmdStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cmdStart.Location = new System.Drawing.Point(368, 80);
+            this.cmdStart.Location = new System.Drawing.Point(360, 101);
             this.cmdStart.Name = "cmdStart";
             this.cmdStart.Size = new System.Drawing.Size(186, 34);
             this.cmdStart.TabIndex = 5;
@@ -124,7 +127,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(13, 91);
+            this.label3.Location = new System.Drawing.Point(13, 112);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(52, 13);
             this.label3.TabIndex = 7;
@@ -134,17 +137,48 @@
             // 
             this.txtWildcard.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtWildcard.Location = new System.Drawing.Point(122, 88);
+            this.txtWildcard.Location = new System.Drawing.Point(122, 109);
             this.txtWildcard.Name = "txtWildcard";
             this.txtWildcard.Size = new System.Drawing.Size(232, 20);
             this.txtWildcard.TabIndex = 8;
             this.txtWildcard.Text = "*.zip";
+            // 
+            // chkReorg
+            // 
+            this.chkReorg.AutoSize = true;
+            this.chkReorg.Location = new System.Drawing.Point(122, 65);
+            this.chkReorg.Name = "chkReorg";
+            this.chkReorg.Size = new System.Drawing.Size(102, 17);
+            this.chkReorg.TabIndex = 9;
+            this.chkReorg.Text = "Reorganize only";
+            this.chkReorg.UseVisualStyleBackColor = true;
+            // 
+            // txtSaveTo
+            // 
+            this.txtSaveTo.Location = new System.Drawing.Point(243, 66);
+            this.txtSaveTo.Name = "txtSaveTo";
+            this.txtSaveTo.Size = new System.Drawing.Size(302, 20);
+            this.txtSaveTo.TabIndex = 10;
+            this.txtSaveTo.Text = "c:\\data2019\\";
+            // 
+            // chkSubFolder
+            // 
+            this.chkSubFolder.AutoSize = true;
+            this.chkSubFolder.Location = new System.Drawing.Point(13, 64);
+            this.chkSubFolder.Name = "chkSubFolder";
+            this.chkSubFolder.Size = new System.Drawing.Size(74, 17);
+            this.chkSubFolder.TabIndex = 11;
+            this.chkSubFolder.Text = "SubFolder";
+            this.chkSubFolder.UseVisualStyleBackColor = true;
             // 
             // frmBatch
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(567, 311);
+            this.Controls.Add(this.chkSubFolder);
+            this.Controls.Add(this.txtSaveTo);
+            this.Controls.Add(this.chkReorg);
             this.Controls.Add(this.txtWildcard);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.txtLog);
@@ -175,5 +209,8 @@
         private System.Windows.Forms.TextBox txtLog;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox txtWildcard;
+        private System.Windows.Forms.CheckBox chkReorg;
+        private System.Windows.Forms.TextBox txtSaveTo;
+        private System.Windows.Forms.CheckBox chkSubFolder;
     }
 }

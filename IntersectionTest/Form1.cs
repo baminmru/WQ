@@ -39,7 +39,7 @@ namespace IntersectionTest
         {
             InitializeComponent();
         }
-        private List<Intersections> iList = null;
+        //private List<Intersections> iList = null;
 
        
 
@@ -405,10 +405,22 @@ namespace IntersectionTest
                 driveIndex++;
                 try
                 {
-                    List<TrackPoint> optTrack;
-                    List<string> optimizedTrack = new List<string>();
-                    //optimizedTrack.Add(header);
 
+                    List<string> optimizedTrack; // = new List<string>();
+
+                    //foreach (TrackPoint tp in t)
+                    //{
+                    //    optimizedTrack.Add(TrackID + "." + driveIndex.ToString() + ";" + tp.T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + tp.X.ToString(ci) + ";" + tp.Y.ToString(ci) + ";" + tp.V.ToString("0.##", ci));
+                    //}
+                    //lock (optLocker)
+                    //{
+                    //    File.WriteAllLines(path2save + "\\opt\\" + TrackID + "." + driveIndex.ToString() + ".csv", optimizedTrack);
+                    //}
+
+
+                    
+                    optimizedTrack = new List<string>();
+                    List<TrackPoint> optTrack;
                     optTrack = Processors.GDouglasPeucker(t, 10);
                     if (optTrack.Count > 1)
                     {
@@ -495,14 +507,13 @@ namespace IntersectionTest
             string FileName;
             FileName = ((AState)a).FileName;
             DateTime prevOut = DateTime.Now;
-            DataTable dt;
             System.Data.SqlClient.SqlConnection cn;
 
             List<TrackPoint> rawTrack = new List<TrackPoint>();
             string TrackID = "";
             string ObjectId = "";
             string Direction = "";
-            Double N = 0.0, E = 0.0, V = 0.0;
+            Double  V = 0.0;
             CultureInfo ci = new CultureInfo("en-US");
 
             try

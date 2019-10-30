@@ -197,12 +197,15 @@ namespace IntersectionTest
             int fc = provider.GetFeatureCount();
             StringBuilder sb = new StringBuilder();
             StringBuilder sb2 = new StringBuilder();
+            StringBuilder sb3 = new StringBuilder();
 
 
 
             for (uint i = 0; i < fc; i++)
             {
                 string s = @"INSERT INTO UDS ([OBJECT_ID] ,[FID_GRAPH] ,[NAME] ,[UTOCH] ,[NAME_SHORT] ,[TITUL],[LAYER] ,[BBOX] ,[DATA]) VALUES (";
+
+                string gs = @"INSERT INTO UDSG ([OBJECT_ID]  ,[DATA]) VALUES (";
 
                 string u = @"update UDS set ";
 
@@ -216,9 +219,12 @@ namespace IntersectionTest
                 s = s + ",'" + fdr["TITUL"].ToString() + "'";
                 s = s + ",'" + name + "'";
 
-
-               
+                gs = gs + fdr["OBJECT_ID"].ToString();
                 
+
+
+
+
                 u = u + "NAME='" + fdr["NAME2"].ToString() + "'";
                 u = u + ",UTOCH='" + fdr["UTOCH"].ToString() + "'";
                 u = u + ",NAME_SHORT='" + fdr["NAME_SHORT"].ToString() + "'";
@@ -239,42 +245,61 @@ namespace IntersectionTest
                 CultureInfo ci = new CultureInfo("en-US");
                 string b;
                 b = "'MULTIPOINT(";
+                string gb;
+                gb = "geography::STGeomFromText('MULTIPOINT(";
+
                 bool isFirst = true;
                 foreach (GeoPoint gp in g.Boundary.Coordinates)
                 {
                     GeoPoint gpt = kga2wgs84.MathTransform.Transform(gp);
                     if (!isFirst)
+                    {
                         b += ",";
+                        gb += ",";
+                    }
+                    gb += "(" + gpt.Y.ToString("0.000000000000", ci) + " " + gpt.X.ToString("0.000000000000", ci) + ")";
                     b += "(" + gpt.X.ToString("0.0000000000", ci) + " " + gpt.Y.ToString("0.0000000000", ci) + ")";
                     isFirst = false;
 
                 }
                 b += ")'";
-                s = s + "," + b;
+                gb += "),4326)'";
+                //gs = gs + "," + gb;
 
 
 
                 string l;
+                string gl;
                 l = "'LINESTRING(";
+                gl = "geography::STGeomFromText('LINESTRING(";
                 isFirst = true;
                 foreach (GeoPoint gp in g.Coordinates)
                 {
                     GeoPoint gpt = kga2wgs84.MathTransform.Transform(gp);
                     if (!isFirst)
+                    {
                         l += ",";
+                        gl += ",";
+                    }
                     l += gpt.X.ToString("0.0000000000", ci) + " " + gpt.Y.ToString("0.0000000000", ci);
+                    gl += gpt.Y.ToString("0.0000000000", ci) + " " + gpt.X.ToString("0.0000000000", ci);
                     isFirst = false;
 
                 }
                 l += ")'";
+                gl += ")',4326)";
                 s = s + "," + l;
+                gs = gs + "," + gl;
 
                 s = s + ");";
+                gs = gs + ");";
                 sb.AppendLine(s);
                 sb2.AppendLine(u);
+                sb3.AppendLine(gs);
             }
 
             File.WriteAllText(Application.StartupPath + "/UDS/"+name+".sql", sb.ToString());
+            File.WriteAllText(Application.StartupPath + "/UDS/" + name + "_g.sql", sb3.ToString());
             File.WriteAllText(Application.StartupPath + "/UDS/" + name + "_update.sql", sb2.ToString());
         }
 

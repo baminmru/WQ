@@ -46,10 +46,13 @@ namespace IntersectionTest
 
         public static string CN;
         public static string Folder;
+        public static bool WithSubfolder;
+        public static string SaveTo;
 
 
 
-        private static void PorcessStream(Stream data)
+
+        private static void PorcessStream(Stream data, string srcName)
         {
             Dictionary<string, List<TrackPoint>> Reorg = new Dictionary<string, List<TrackPoint>>();
             using (StreamReader stream = new StreamReader(data))
@@ -57,8 +60,8 @@ namespace IntersectionTest
                 string TrackID = "";
 
                 Double N = 0.0, E = 0.0, V = 0.0;
-                DateTime d;
-
+                DateTime d=DateTime.MinValue;
+                bool OK;
                
 
                 Total = 0;
@@ -66,8 +69,10 @@ namespace IntersectionTest
                 {
                     string s = stream.ReadLine();
                     string[] cols = s.Split(';');
-                    if (cols.Length >= 8)
+                    OK = false;
+                    if (cols.Length >=7)
                     {
+                        OK = true;
                         TrackID = cols[0];
                         if (cols[4].Contains(","))
                             N = Double.Parse(cols[4], ciRus);
@@ -78,10 +83,14 @@ namespace IntersectionTest
                         else
                             E = Double.Parse(cols[5], ci);
 
+
                         if (cols[6].Contains(","))
                             V = Double.Parse(cols[6], ciRus);
                         else
                             V = Double.Parse(cols[6], ci);
+
+                        
+
                         N = N * 180 / Math.PI;
                         E = E * 180 / Math.PI;
 
@@ -95,6 +104,8 @@ namespace IntersectionTest
                             }
                             catch
                             {
+                                OK = false;
+                                d = DateTime.MinValue;
                             }
                         }
                         else
@@ -105,9 +116,67 @@ namespace IntersectionTest
                             }
                             catch
                             {
+                                OK = false;
+                                d = DateTime.MinValue;
+                            }
+                        }
+                    }
+
+                    // optimized tracks
+                    if (cols.Length == 5)
+                    {
+                        TrackID = cols[0];
+                        OK = true;
+
+                        d = DateTime.MinValue;
+
+                        if (cols[1].Length == 23)
+                        {
+                            try
+                            {
+                                d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss.fff", ci);
+                            }
+                            catch
+                            {
+                                OK = false;
+                            }
+                        }
+                        else
+                        {
+                            try
+                            {
+                                d = DateTime.ParseExact(cols[1], "yyyy-MM-dd HH:mm:ss", ci);
+                            }
+                            catch
+                            {
+                                OK = false;
                             }
                         }
 
+                        if (cols[2].Contains(","))
+                            E = Double.Parse(cols[2], ciRus);
+                        else
+                            E = Double.Parse(cols[2], ci);
+                        if (cols[3].Contains(","))
+                            N= Double.Parse(cols[3], ciRus);
+                        else
+                            N = Double.Parse(cols[3], ci);
+
+
+                        if (cols[4].Contains(","))
+                            V = Double.Parse(cols[4], ciRus);
+                        else
+                            V = Double.Parse(cols[4], ci);
+
+                        
+
+                        //N = N * 180 / Math.PI;
+                        //E = E * 180 / Math.PI;
+
+                      
+                    }
+                    if (OK)
+                    {
                         TrackPoint tp = new TrackPoint() { X = E, Y = N, V = V, T = d };
 
                         if (Reorg.ContainsKey(TrackID))
@@ -121,6 +190,7 @@ namespace IntersectionTest
                             Reorg.Add(TrackID, newList);
                         }
                     }
+                    
                     Total++;
                     lCnt++;
 
@@ -140,26 +210,33 @@ namespace IntersectionTest
                 {
                     tCur++;
                     logger.Info("Optimizing " + s);
-                    optimized = AnalizeTrack(Reorg[s], s);
-                    dCnt += optimized.Keys.Count;
+                    optimized = AnalizeTrack(Reorg[s], s,srcName);
+                    if(optimized !=null)
+                        dCnt += optimized.Keys.Count;
 
-                    logger.Info("Linking " + s);
 
-                    foreach (string sOpt in optimized.Keys)
+                    if (!DoReorgOnly)
                     {
 
-                        List<LinkObject> lnk;
-                        lnk = LinkFile(CN, sOpt, optimized[sOpt]);
-                        if (lnk.Count > 0)
-                        {
-                            logger.Info("Saving: " + sOpt);
+                        logger.Info("Linking " + s);
 
-                            Save2DB(CN, lnk);
-                            lnk.Clear();
+                        foreach (string sOpt in optimized.Keys)
+                        {
+
+                            List<LinkObject> lnk;
+                            lnk = LinkFile(CN, sOpt, optimized[sOpt]);
+                            if (lnk.Count > 0)
+                            {
+                                logger.Info("Saving: " + sOpt);
+
+                                Save2DB(CN, lnk);
+                                lnk.Clear();
+                            }
+                            dCur++;
+                            optimized[sOpt].Clear();
                         }
-                        dCur++;
-                        optimized[sOpt].Clear();
                     }
+                   
 
                     optimized.Clear();
                     Reorg[s].Clear();
@@ -175,6 +252,8 @@ namespace IntersectionTest
         {
 
             string zName = (string)zipName;
+            FileInfo fi = new FileInfo(zName);
+            string xName = fi.Name.Replace(fi.Extension, "");
 
             using (var file = File.OpenRead(zName))
             {
@@ -190,7 +269,7 @@ namespace IntersectionTest
                     {
                         foreach (var entry in zip.Entries)
                         {
-                            PorcessStream(entry.Open());
+                            PorcessStream(entry.Open(), xName);
                         }
                     }
                 }
@@ -201,7 +280,7 @@ namespace IntersectionTest
                     logger.Info("Processing as GZIP file");
                     using (var zipStream = new GZipStream(file, CompressionMode.Decompress))
                     {
-                        PorcessStream(zipStream);
+                        PorcessStream(zipStream,xName);
                     }
                 }
 
@@ -209,30 +288,60 @@ namespace IntersectionTest
                 if (zName.ToLower().EndsWith(".csv"))
                 {
                     logger.Info("Processing as CSV file");
-                    PorcessStream(file);
+                    PorcessStream(file,xName);
                 }
             }
         }
 
+        private static bool DoReorgOnly;
 
-        public static bool ProcessFolder(string Wildcard)
+        public static bool ProcessFolder(string Wildcard, bool ReorgOnly)
         {
+            DoReorgOnly = ReorgOnly;
             DirectoryInfo di = new DirectoryInfo(Folder);
-            FileInfo[] files = di.GetFiles(Wildcard);
-            fCnt = files.Length;
+            List<FileInfo> files = new List<FileInfo>();
+            if (WithSubfolder)
+            {
+                foreach(DirectoryInfo sdi in di.GetDirectories())
+                {
+                    files.AddRange( sdi.GetFiles(Wildcard));
+                }
+            }
+            else
+            {
+                files.AddRange( di.GetFiles(Wildcard));
+            }
+
+
+            
+            fCnt = files.Count;
 
             if (fCnt > 0)
             {
-
-                ThreadPool.SetMinThreads(15, 0);
-                ThreadPool.SetMaxThreads(16, 0);
                 StartTime = DateTime.MinValue;
-
                 fCur = 0;
-                foreach (FileInfo fi in files)
+                if (DoReorgOnly)
                 {
-                    ThreadPool.QueueUserWorkItem(ProcessFile, (object)fi.FullName);
+                    ThreadPool.SetMinThreads(2, 0);
+                    ThreadPool.SetMaxThreads(2, 0);
+                    foreach (FileInfo fi in files)
+                    {
+                        ThreadPool.QueueUserWorkItem(ProcessFile, (object)fi.FullName);
+                    }
                 }
+                else
+                {
+                    ThreadPool.SetMinThreads(15, 0);
+                    ThreadPool.SetMaxThreads(16, 0);
+                    foreach (FileInfo fi in files)
+                    {
+                        ThreadPool.QueueUserWorkItem(ProcessFile, (object)fi.FullName);
+                    }
+                }
+                
+
+                
+                
                 return true;
             }
             else
@@ -242,6 +351,8 @@ namespace IntersectionTest
             
         }
 
+        private static DateTime DFrom = new DateTime(2019, 1, 1);
+        private static DateTime DTo = new DateTime(2020, 1, 1);
 
         // режем на поездки
         private static List<List<TrackPoint>> SptitTrack(List<TrackPoint> Track)
@@ -259,39 +370,45 @@ namespace IntersectionTest
             TrackPoint LastMovePoint = Track[0];
             foreach (TrackPoint tt in Track)
             {
-                // если скорость зафиксирована, то используем её
-                if (tt.V > MinV)
+              
+
+                if (tt.T < DTo && tt.T >= DFrom && !double.IsNaN(tt.V))
                 {
-                    LastMovePoint = tt;
-                    cur.Add(tt);
-                }
-                else
-                {
-                    // возможно  скорость просто не фиксируется прибором
-                    double d = Processors.DistanceOnEarth(tt.X, tt.Y, LastMovePoint.X, LastMovePoint.Y);
-                    if (d > Distance)
+
+                    // если скорость зафиксирована, то используем её
+                    if (tt.V > MinV)
                     {
-                        // если есть перемещение, то продолжаем записывать его в текущую поездку
                         LastMovePoint = tt;
                         cur.Add(tt);
                     }
                     else
                     {
-                        // перемещение не зафиксировано
-                        // проверяем как долго стоит машина
-                        if (Math.Abs((tt.T - LastMovePoint.T).TotalMinutes) > StopTime)
+                        // возможно  скорость просто не фиксируется прибором
+                        double d = Processors.DistanceOnEarth(tt.X, tt.Y, LastMovePoint.X, LastMovePoint.Y);
+                        if (d > Distance)
                         {
-                            // определили остановку, фиксируем поездку
-                            if (cur.Count > 0)
-                                l.Add(cur);
-
-                            // дальше будет уже следующая
-                            cur = new List<TrackPoint>();
+                            // если есть перемещение, то продолжаем записывать его в текущую поездку
+                            LastMovePoint = tt;
+                            cur.Add(tt);
                         }
+                        else
+                        {
+                            // перемещение не зафиксировано
+                            // проверяем как долго стоит машина
+                            if (Math.Abs((tt.T - LastMovePoint.T).TotalMinutes) > StopTime)
+                            {
+                                // определили остановку, фиксируем поездку
+                                if (cur.Count > 0)
+                                    l.Add(cur);
+
+                                // дальше будет уже следующая
+                                cur = new List<TrackPoint>();
+                            }
+                        }
+
+
+
                     }
-
-
-
                 }
 
             }
@@ -301,15 +418,32 @@ namespace IntersectionTest
         }
 
 
-        private static Dictionary<string, List<TrackPoint>> AnalizeTrack(List<TrackPoint> Track, string TrackID)
+        private static Dictionary<string, List<TrackPoint>> AnalizeTrack(List<TrackPoint> Track, string TrackID, string srcName)
         {
 
             Dictionary<string, List<TrackPoint>> opt = new Dictionary<string, List<TrackPoint>>();
 
             // сортируем список по времени
             Track.Sort();
+            //if (DoReorgOnly)
+            //{
+            //    List<string> optimizedTrack = new List<string>();
+            //    foreach (TrackPoint tp in Track)
+            //    {
+            //        if (double.IsNaN(tp.V))
+            //        {
+            //            System.Diagnostics.Debug.Print("?");
+            //        }
+            //        optimizedTrack.Add(TrackID + ";" + tp.T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + tp.X.ToString(ci) + ";" + tp.Y.ToString(ci) + ";" + tp.V.ToString("0.##", ci));
+            //    }
+            //    if (!Directory.Exists(SaveTo + srcName))
+            //    {
+            //        Directory.CreateDirectory(SaveTo + srcName);
+            //    }
+            //    File.WriteAllLines(SaveTo + srcName + "\\" + TrackID + ".csv", optimizedTrack);
+            //    return opt;
+            //} 
 
-          
             // разбиваем на поездки
             List<List<TrackPoint>> l = SptitTrack(Track);
             Int64 driveIndex = 0;
@@ -320,14 +454,69 @@ namespace IntersectionTest
                 try
                 {
                     List<TrackPoint> optTrack;
-                    List<string> optimizedTrack = new List<string>();
-                  
+
+
+                    //if (DoReorgOnly)
+                    //{
+                    //    List<string> optimizedTrack = new List<string>();
+                    //    foreach (TrackPoint tp in t)
+                    //    {
+                    //        if (double.IsNaN(tp.V))
+                    //        {
+                    //            System.Diagnostics.Debug.Print("?");
+                    //        }
+                    //        optimizedTrack.Add(TrackID + "." + driveIndex.ToString() + ";" + tp.T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + tp.X.ToString(ci) + ";" + tp.Y.ToString(ci) + ";" + tp.V.ToString("0.##", ci));
+                    //    }
+                    //    if (!Directory.Exists(SaveTo + srcName))
+                    //    {
+                    //        Directory.CreateDirectory(SaveTo + srcName);
+                    //    }
+                    //    File.WriteAllLines(SaveTo + srcName + "\\" + TrackID + "." + driveIndex.ToString() + "_src.csv", optimizedTrack);
+                    //}
+
+
                     optTrack = Processors.GDouglasPeucker(t, 8);
                     if (optTrack.Count > 1)
                     {
                             opt.Add(TrackID + "." + driveIndex.ToString(),optTrack);
                     }
 
+                    if (DoReorgOnly)
+                    {
+                        List<string> optimizedTrack = new List<string>();
+                        bool UseIt;
+
+                        UseIt = false;
+                        if (optTrack.Count > 2)
+                        {
+                            foreach (TrackPoint tp in optTrack)
+                            {
+                                if (!double.IsNaN(tp.V) && tp.V > 2)
+                                {
+                                    UseIt = true;
+                                    break;
+                                }
+
+                            }
+                        }
+
+                        if (UseIt)
+                        {
+                            foreach (TrackPoint tp in optTrack)
+                            {
+                                //if( double.IsNaN(tp.V))
+                                //{
+                                //    System.Diagnostics.Debug.Print("?");
+                                //}
+                                optimizedTrack.Add(TrackID + "." + driveIndex.ToString() + ";" + tp.T.ToString("yyyy-MM-dd HH:mm:ss") + ";" + tp.X.ToString(ci) + ";" + tp.Y.ToString(ci) + ";" + tp.V.ToString("0.##", ci));
+                            }
+                            if (!Directory.Exists(SaveTo + srcName))
+                            {
+                                Directory.CreateDirectory(SaveTo + srcName);
+                            }
+                            File.WriteAllLines(SaveTo + srcName + "\\" + TrackID + "." + driveIndex.ToString() + ".csv", optimizedTrack);
+                        }
+                    }
                 }
                 catch (System.Exception ex)
                 {
@@ -336,6 +525,9 @@ namespace IntersectionTest
 
 
             }
+
+            
+
             return opt;
 
 
@@ -377,7 +569,6 @@ namespace IntersectionTest
 
             DataTable dt;
             System.Data.SqlClient.SqlConnection cn;
-            Double N = 0.0, E = 0.0, V = 0.0;
             List<LinkObject> links = new List<LinkObject>();
 
             try
@@ -413,7 +604,7 @@ namespace IntersectionTest
 
                                 geom += ")";
                                 dt = new DataTable();
-                                double gLen = 0.0;
+                                //double gLen = 0.0;
 
                                 //// считаем длину сегмента
                                 //{
@@ -446,7 +637,7 @@ namespace IntersectionTest
                                     //iQryCnt++;
                                     SqlCommand cmd = new SqlCommand();
                                     cmd.Connection = cn;
-                                    cmd.CommandText = @"SELECT  OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 and BUFFER.STIntersection('" + geom + "').STLength() >=   SEGLENGTH  order by seglength desc"; 
+                                    cmd.CommandText = @"SELECT  OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 and BUFFER.STIntersection('" + geom + "').STLength() >=   SEGLENGTH  order by SEGLENGTH desc"; 
                                     SqlDataAdapter sda = new SqlDataAdapter(cmd);
 
                                     try
