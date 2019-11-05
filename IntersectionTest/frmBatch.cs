@@ -130,5 +130,10 @@ namespace IntersectionTest
             }
             Application.DoEvents();
         }
+
+        private void txtLog_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

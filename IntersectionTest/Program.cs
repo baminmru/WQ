@@ -16,7 +16,7 @@ namespace IntersectionTest
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmBatch());
+            Application.Run(new frmMain());
         }
     }
 }

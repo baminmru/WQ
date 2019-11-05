@@ -123,6 +123,7 @@
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.txtLog.Size = new System.Drawing.Size(538, 154);
             this.txtLog.TabIndex = 6;
+            this.txtLog.TextChanged += new System.EventHandler(this.txtLog_TextChanged);
             // 
             // label3
             // 

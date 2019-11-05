@@ -133,11 +133,35 @@
     <Compile Include="frmBatch.Designer.cs">
       <DependentUpon>frmBatch.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmInterval.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmInterval.Designer.cs">
+      <DependentUpon>frmInterval.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmMain.Designer.cs">
+      <DependentUpon>frmMain.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmMap.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmMap.Designer.cs">
       <DependentUpon>frmMap.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmOSM.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmOSM.Designer.cs">
+      <DependentUpon>frmOSM.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmTrand.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmTrand.Designer.cs">
+      <DependentUpon>frmTrand.cs</DependentUpon>
     </Compile>
     <Compile Include="Intersections.cs" />
     <Compile Include="LinkObject.cs" />
@@ -151,8 +175,20 @@
     <EmbeddedResource Include="frmBatch.resx">
       <DependentUpon>frmBatch.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmInterval.resx">
+      <DependentUpon>frmInterval.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmMain.resx">
+      <DependentUpon>frmMain.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmMap.resx">
       <DependentUpon>frmMap.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmOSM.resx">
+      <DependentUpon>frmOSM.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmTrand.resx">
+      <DependentUpon>frmTrand.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -169,6 +205,21 @@
     </Content>
     <None Include="NLog.xsd">
       <SubType>Designer</SubType>
+    </None>
+    <None Include="OSM\roads.cpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="OSM\roads.dbf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="OSM\roads.prj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="OSM\roads.shp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="OSM\roads.shx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -196,5 +247,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

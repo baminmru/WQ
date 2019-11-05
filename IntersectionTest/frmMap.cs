@@ -116,9 +116,9 @@ namespace IntersectionTest
             this.mapBox1.Map.BackgroundLayer.Add(osmLayer);
 
 
-            Envelope geom = GeometryTransform.TransformBox(
-                new Envelope(28, 31, 58, 61),
-                mathTransform);
+            //Envelope geom = GeometryTransform.TransformBox(
+            //    new Envelope(28, 31, 58, 61),
+            //    mathTransform);
 
 
 
@@ -166,8 +166,12 @@ namespace IntersectionTest
                 SaveLayer(fi.Name, streets);
                 this.mapBox1.Map.Layers.Add(streets);
             }
-            this.mapBox1.Map.ZoomToBox(geom);
-            
+
+            GeoPoint gpt = Wgs84toGoogleMercator.MathTransform.Transform(new GeoPoint(29, 59));
+            GeoPoint gpt2 = Wgs84toGoogleMercator.MathTransform.Transform(new GeoPoint(31, 61));
+            this.mapBox1.Map.ZoomToBox(new Envelope(gpt, gpt2));
+
+
             this.mapBox1.Refresh();
             this.mapBox1.ActiveTool= MapBox.Tools.Pan;
         }
@@ -265,7 +269,7 @@ namespace IntersectionTest
                 b += ")'";
                 gb += "),4326)'";
                 //gs = gs + "," + gb;
-
+                s = s + "," + b;
 
 
                 string l;
@@ -282,7 +286,7 @@ namespace IntersectionTest
                         gl += ",";
                     }
                     l += gpt.X.ToString("0.0000000000", ci) + " " + gpt.Y.ToString("0.0000000000", ci);
-                    gl += gpt.Y.ToString("0.0000000000", ci) + " " + gpt.X.ToString("0.0000000000", ci);
+                    gl += gpt.X.ToString("0.0000000000", ci) + " " + gpt.Y.ToString("0.0000000000", ci);
                     isFirst = false;
 
                 }
@@ -327,39 +331,7 @@ namespace IntersectionTest
             this.mapBox1.Refresh();
         }
 
-        private static void GeneratePoints(IGeometryFactory factory, ICollection<IGeometry> geometry, Random rndGen)
-        {
-            var numPoints = rndGen.Next(10, 100);
-            for (var pointIndex = 0; pointIndex < numPoints; pointIndex++)
-            {
-                var point = new GeoPoint(rndGen.NextDouble() * 1000, rndGen.NextDouble() * 1000);
-                geometry.Add(factory.CreatePoint(point));
-            }
-        }
-
-        private static void GenerateLines(IGeometryFactory factory, ICollection<IGeometry> geometry, Random rndGen)
-        {
-            var numLines = rndGen.Next(10, 100);
-            for (var lineIndex = 0; lineIndex < numLines; lineIndex++)
-            {
-                var numVerticies = rndGen.Next(4, 15);
-                var vertices = new GeoPoint[numVerticies];
-
-                var lastPoint = new GeoPoint(rndGen.NextDouble() * 1000, rndGen.NextDouble() * 1000);
-                vertices[0] = lastPoint;
-
-                for (var vertexIndex = 1; vertexIndex < numVerticies; vertexIndex++)
-                {
-                    var nextPoint = new GeoPoint(lastPoint.X + rndGen.Next(-50, 50),
-                                                 lastPoint.Y + rndGen.Next(-50, 50));
-                    vertices[vertexIndex] = nextPoint;
-
-                    lastPoint = nextPoint;
-                }
-                geometry.Add(factory.CreateLineString(vertices));
-            }
-        }
-
+        
         private void Button1_Click(object sender, EventArgs e)
         {
             //System.Collections.Generic.IEnumerable<string> jsons;

@@ -637,6 +637,7 @@ namespace IntersectionTest
                                     //iQryCnt++;
                                     SqlCommand cmd = new SqlCommand();
                                     cmd.Connection = cn;
+                                    //cmd.CommandText = @"SELECT  OBJECT_ID FROM UDS where FID_GRAPH=-1 and BUFFER.STIntersects('" + geom + "') = 1 and BUFFER.STIntersection('" + geom + "').STLength() >=   SEGLENGTH  order by SEGLENGTH desc";
                                     cmd.CommandText = @"SELECT  OBJECT_ID FROM UDS where BUFFER.STIntersects('" + geom + "') = 1 and BUFFER.STIntersection('" + geom + "').STLength() >=   SEGLENGTH  order by SEGLENGTH desc"; 
                                     SqlDataAdapter sda = new SqlDataAdapter(cmd);
 
