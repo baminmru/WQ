@@ -194,6 +194,13 @@ namespace IntersectionTest
         }
 
 
+        public static double Meter2Grad(int kink)
+        {
+            double  band_sqr;
+            band_sqr = kink * 360.0 / (2.0 * Math.PI * 6378137.0);
+            return  band_sqr;
+        }
+
         // see http://www.bdcc.co.uk/Gmaps/Services.htm
         // http://www.cyberforum.ru/csharp-beginners/thread1237322.html        
         public static List<TrackPoint> GDouglasPeucker(List<TrackPoint> source, int kink)

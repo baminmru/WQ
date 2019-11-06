@@ -137,37 +137,44 @@ namespace IntersectionTest
         private SharpMap.Styles.VectorStyle GetStreetStyle(SharpMap.Data.FeatureDataRow row)
         {
             SharpMap.Styles.VectorStyle style = new SharpMap.Styles.VectorStyle();
+            int sz;
+            if (optBuf.Checked)
+                sz = 1;
+            else
+                sz = 4;
 
             switch (row["Q"].ToString().ToUpper())
             {
-                case "A": 
-                    style.Fill = Brushes.Green;
-                    style.Line = new Pen(style.Fill, 4);
+
+
+                case "A":
+                    style.Fill =Brushes.Green;
+                    style.Line = new Pen(style.Fill, sz);
                     return style;
                 case "B": 
                     style.Fill = Brushes.YellowGreen;
-                    style.Line = new Pen(style.Fill, 4);
+                    style.Line = new Pen(style.Fill, sz);
                     return style;
                 case "C": 
                     style.Fill = Brushes.Yellow;
-                    style.Line = new Pen(style.Fill, 4);
+                    style.Line = new Pen(style.Fill, sz);
                     return style;
                 case "D": 
                     style.Fill = Brushes.Orange;
-                    style.Line = new Pen(style.Fill, 4);
+                    style.Line = new Pen(style.Fill, sz);
                     return style;
                 case "E": 
                     style.Fill = Brushes.OrangeRed;
-                    style.Line = new Pen(style.Fill, 4);
+                    style.Line = new Pen(style.Fill, sz);
                     return style;
                 case "F": 
                     style.Fill = Brushes.Red;
-                    style.Line = new Pen(style.Fill, 4);
+                    style.Line = new Pen(style.Fill, sz);
                     return style;
 
                 default:
                     style.Fill = Brushes.Cyan;
-                    style.Line = new Pen(style.Fill, 5);
+                    style.Line = new Pen(style.Fill, sz);
                     return style;
             }
 
@@ -204,7 +211,12 @@ namespace IntersectionTest
            
             string ConnectionString = txtCN.Text;
 
-            SqlServer2008 ds = new SqlServer2008(ConnectionString, "UDSG", "DATA", "OBJECT_ID", SqlServerSpatialObjectType.Geography, 4326, SqlServer2008ExtentsMode.QueryIndividualFeatures);
+            SqlServer2008 ds;
+
+            if(optBuf.Checked)
+                ds = new SqlServer2008(ConnectionString, "v_USDG", "DATA", "OBJECT_ID", SqlServerSpatialObjectType.Geography, 4326, SqlServer2008ExtentsMode.QueryIndividualFeatures);
+            else
+                ds = new SqlServer2008(ConnectionString, "v_USDG2", "DATA", "OBJECT_ID", SqlServerSpatialObjectType.Geography, 4326, SqlServer2008ExtentsMode.QueryIndividualFeatures);
 
             ds.Open();
 
@@ -234,17 +246,32 @@ namespace IntersectionTest
             this.mapBox1.Map.Layers.Add(layRoads);
 
 
-            SharpMap.Layers.LabelLayer layRoadLabel = new SharpMap.Layers.LabelLayer("Road labels");
+            SharpMap.Layers.LabelLayer layLabel = new SharpMap.Layers.LabelLayer("Road labels");
+
+            layLabel.DataSource = layRoads.DataSource;
+            layLabel.Enabled = true;
+
             
-            layRoadLabel.DataSource = layRoads.DataSource;
-            layRoadLabel.Enabled = true;
 
-            //Specifiy field that contains the label string.
-            layRoadLabel.LabelColumn = "object_id";
 
-          
+
+            layLabel.Enabled = true;
+            layLabel.LabelColumn = "object_id";
+            layLabel.MaxVisible = 2;
+            layLabel.MaxVisible = 190;
+            layLabel.MinVisible = 130;
+            layLabel.MultipartGeometryBehaviour = SharpMap.Layers.LabelLayer.MultipartGeometryBehaviourEnum.Largest;
+            layLabel.LabelFilter = SharpMap.Rendering.LabelCollisionDetection.ThoroughCollisionDetection;
+            layLabel.PriorityColumn = "object_id";
+            layLabel.Style.ForeColor = Color.Beige;
+            layLabel.Style.Font = new Font(FontFamily.GenericSerif, 12);
+            layLabel.Style.BackColor = new System.Drawing.SolidBrush(Color.FromArgb(128, 255, 0, 0));
+            layLabel.Style.HorizontalAlignment = SharpMap.Styles.LabelStyle.HorizontalAlignmentEnum.Center;
+            layLabel.Style.CollisionDetection = true;
+
+
             //Add label layer to map
-            this.mapBox1.Map.Layers.Add(layRoadLabel);
+            this.mapBox1.Map.Layers.Add(layLabel);
 
 
 

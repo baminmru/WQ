@@ -36,15 +36,17 @@
             this.mapZoomToolStrip1 = new SharpMap.Forms.ToolBar.MapZoomToolStrip(this.components);
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.cmbInterval = new System.Windows.Forms.ComboBox();
+            this.optUDS = new System.Windows.Forms.RadioButton();
+            this.optBuf = new System.Windows.Forms.RadioButton();
             this.SuspendLayout();
             // 
             // txtCN
             // 
             this.txtCN.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtCN.Location = new System.Drawing.Point(198, 31);
+            this.txtCN.Location = new System.Drawing.Point(342, 31);
             this.txtCN.Name = "txtCN";
-            this.txtCN.Size = new System.Drawing.Size(590, 20);
+            this.txtCN.Size = new System.Drawing.Size(446, 20);
             this.txtCN.TabIndex = 4;
             this.txtCN.Text = "Server=localhost;Database=WQ2;Trusted_Connection=True;MultipleActiveResultSets=tr" +
     "ue;";
@@ -52,7 +54,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(100, 38);
+            this.label1.Location = new System.Drawing.Point(244, 34);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(92, 13);
             this.label1.TabIndex = 3;
@@ -119,11 +121,35 @@
             this.cmbInterval.TabIndex = 7;
             this.cmbInterval.SelectedIndexChanged += new System.EventHandler(this.cmbInterval_SelectedIndexChanged);
             // 
+            // optUDS
+            // 
+            this.optUDS.AutoSize = true;
+            this.optUDS.Checked = true;
+            this.optUDS.Location = new System.Drawing.Point(100, 34);
+            this.optUDS.Name = "optUDS";
+            this.optUDS.Size = new System.Drawing.Size(49, 17);
+            this.optUDS.TabIndex = 8;
+            this.optUDS.TabStop = true;
+            this.optUDS.Text = "УДС";
+            this.optUDS.UseVisualStyleBackColor = true;
+            // 
+            // optBuf
+            // 
+            this.optBuf.AutoSize = true;
+            this.optBuf.Location = new System.Drawing.Point(155, 34);
+            this.optBuf.Name = "optBuf";
+            this.optBuf.Size = new System.Drawing.Size(57, 17);
+            this.optBuf.TabIndex = 9;
+            this.optBuf.Text = "Буфер";
+            this.optBuf.UseVisualStyleBackColor = true;
+            // 
             // frmTrand
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.optBuf);
+            this.Controls.Add(this.optUDS);
             this.Controls.Add(this.cmbInterval);
             this.Controls.Add(this.mapZoomToolStrip1);
             this.Controls.Add(this.cmdStart);
@@ -148,5 +174,7 @@
         private SharpMap.Forms.ToolBar.MapZoomToolStrip mapZoomToolStrip1;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.ComboBox cmbInterval;
+        private System.Windows.Forms.RadioButton optUDS;
+        private System.Windows.Forms.RadioButton optBuf;
     }
 }

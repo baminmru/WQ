@@ -76,8 +76,8 @@
             this.txtCN.Name = "txtCN";
             this.txtCN.Size = new System.Drawing.Size(433, 20);
             this.txtCN.TabIndex = 2;
-            this.txtCN.Text = "Server=localhost;Database=WQ;Trusted_Connection=True;MultipleActiveResultSets=tru" +
-    "e;";
+            this.txtCN.Text = "Server=localhost;Database=WQ3;Trusted_Connection=True;MultipleActiveResultSets=tr" +
+    "ue;";
             // 
             // txtFolder
             // 
