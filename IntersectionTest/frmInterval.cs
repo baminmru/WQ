@@ -90,9 +90,8 @@ namespace IntersectionTest
                 txtLog.Text = i.ToString() + " (" + dt.Rows.Count.ToString() + ") ->" +o;
                 Application.DoEvents();
 
-                string query = @"select daytype,direction,hour,avg(v) V from v_track where object_id=" + o + @"
-                group by daytype,direction,hour
-                HAVING COUNT(*) >10
+                string query = @"select daytype,direction,hour, V from interval_calc where object_id=" + o + @"
+                and CNT >8
                 order by daytype,direction,hour";
 
                 DataTable dt2;

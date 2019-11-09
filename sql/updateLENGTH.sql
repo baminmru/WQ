@@ -1,0 +1,1 @@
+update UDS set MLENGTH=geography::STGeomFromText(DATA.ToString(),4326).STLength();

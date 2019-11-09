@@ -191,8 +191,12 @@ namespace IntersectionTest
 
         private void cmdStart_Click(object sender, EventArgs e)
         {
+
             try
             {
+
+                cmdStart.Enabled = false;
+                txtCN.Enabled = false;
 
 
 
@@ -247,32 +251,32 @@ namespace IntersectionTest
                 this.mapBox1.Map.Layers.Add(layRoads);
 
 
-                //SharpMap.Layers.LabelLayer layLabel = new SharpMap.Layers.LabelLayer("Road labels");
+                SharpMap.Layers.LabelLayer layLabel = new SharpMap.Layers.LabelLayer("Road labels");
 
-                //layLabel.DataSource = layRoads.DataSource;
-                //layLabel.Enabled = true;
-
-
+                layLabel.DataSource = layRoads.DataSource;
+                layLabel.Enabled = true;
 
 
 
-                //layLabel.Enabled = true;
-                //layLabel.LabelColumn = "object_id";
-                //layLabel.MaxVisible = 2;
-                //layLabel.MaxVisible = 190;
-                //layLabel.MinVisible = 130;
-                //layLabel.MultipartGeometryBehaviour = SharpMap.Layers.LabelLayer.MultipartGeometryBehaviourEnum.Largest;
-                //layLabel.LabelFilter = SharpMap.Rendering.LabelCollisionDetection.ThoroughCollisionDetection;
-                //layLabel.PriorityColumn = "object_id";
-                //layLabel.Style.ForeColor = Color.Beige;
-                //layLabel.Style.Font = new Font(FontFamily.GenericSerif, 12);
-                //layLabel.Style.BackColor = new System.Drawing.SolidBrush(Color.FromArgb(128, 255, 0, 0));
-                //layLabel.Style.HorizontalAlignment = SharpMap.Styles.LabelStyle.HorizontalAlignmentEnum.Center;
-                //layLabel.Style.CollisionDetection = true;
 
 
-                ////Add label layer to map
-                //this.mapBox1.Map.Layers.Add(layLabel);
+                layLabel.Enabled = true;
+                layLabel.LabelColumn = "object_id";
+                layLabel.MaxVisible = 2;
+                layLabel.MaxVisible = 190;
+                layLabel.MinVisible = 130;
+                layLabel.MultipartGeometryBehaviour = SharpMap.Layers.LabelLayer.MultipartGeometryBehaviourEnum.Largest;
+                layLabel.LabelFilter = SharpMap.Rendering.LabelCollisionDetection.ThoroughCollisionDetection;
+                layLabel.PriorityColumn = "object_id";
+                layLabel.Style.ForeColor = Color.Beige;
+                layLabel.Style.Font = new Font(FontFamily.GenericSerif, 12);
+                layLabel.Style.BackColor = new System.Drawing.SolidBrush(Color.FromArgb(128, 255, 0, 0));
+                layLabel.Style.HorizontalAlignment = SharpMap.Styles.LabelStyle.HorizontalAlignmentEnum.Center;
+                layLabel.Style.CollisionDetection = true;
+
+
+                //Add label layer to map
+                this.mapBox1.Map.Layers.Add(layLabel);
 
 
 
@@ -310,18 +314,59 @@ namespace IntersectionTest
                     if (dtIntervals.Rows.Count > 0)
                     {
                         CurInterval = 0;
+                        //timer1.Enabled = true;
+                        //do
+                        //{
+                        //    DataTable dtTrand = new DataTable();
+                        //    SqlCommand cmd = new SqlCommand();
+                        //    cmd.Connection = cn;
+                        //    string qry = @"select * from trands where YD ='" + dtIntervals.Rows[CurInterval]["YD"].ToString() + "' and DAYINTERVAL=" + dtIntervals.Rows[CurInterval]["DAYINTERVAL"].ToString() + " order by object_id";
+                        //    cmd.CommandText = qry;
+                        //    SqlDataAdapter sda = new SqlDataAdapter(cmd);
+
+                        //    try
+                        //    {
+                        //        sda.Fill(dtTrand);
+                        //    }
+                        //    catch (System.Exception ex)
+                        //    {
+                        //        logger.Debug(cmd.CommandText + " " + ex.Message);
+                        //    }
+
+                        //    sda.Dispose();
+                        //    cmd.Dispose();
+                        //    Application.DoEvents();
+                        //    foreach (FeatureDataRow fdr in fds.Tables[0].Rows)
+                        //    {
+                        //        fdr["Q"] = '?';
+                        //        foreach (DataRow dr in dtTrand.Rows)
+                        //        {
+                        //            if (fdr["object_id"].ToString() == dr["object_id"].ToString())
+                        //            {
+                        //                fdr["Q"] = dr["PPM"].ToString();
+                        //                break;
+                        //            }
+                        //        }
+                        //    }
+
+                        //    lblInfo.Text = dtIntervals.Rows[CurInterval]["YD"].ToString() + " Интервал:" + dtIntervals.Rows[CurInterval]["DAYINTERVAL"].ToString();
+                        //    CurInterval++;
+                        //    this.mapBox1.Refresh();
+                        //    Application.DoEvents();
+
+                        //} while (CurInterval != dtIntervals.Rows.Count);
+
+                        //cmdStart.Enabled = true;
+                        //txtCN.Enabled = true;
+                        //this.mapBox1.Map.Layers.Remove(layRoads);
 
                     }
                 }
-            }
-            catch (System.Exception ex) {
+
+            }catch(System.Exception ex)
+            {
                 MessageBox.Show(ex.Message);
-                return; 
             }
-            cmdStart.Enabled = false;
-            txtCN.Enabled = false;
-
-
         }
 
 
