@@ -352,7 +352,7 @@ namespace IntersectionTest
         }
 
         private static DateTime DFrom = new DateTime(2019, 1, 1);
-        private static DateTime DTo = new DateTime(2020, 1, 1);
+        private static DateTime DTo = new DateTime(2021, 1, 1);
 
         // режем на поездки
         private static List<List<TrackPoint>> SptitTrack(List<TrackPoint> Track)

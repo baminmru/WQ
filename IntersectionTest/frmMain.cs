@@ -46,5 +46,19 @@ namespace IntersectionTest
             frmTrand fi = new frmTrand();
             fi.Show();
         }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            
+                frmDayOff fb = new frmDayOff();
+                fb.Show();
+            
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            frmMatrix fm = new frmMatrix();
+            fm.Show();
+        }
     }
 }
