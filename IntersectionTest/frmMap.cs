@@ -94,12 +94,14 @@ namespace IntersectionTest
             this.mapBox1.Map.BackgroundLayer.Clear();
 
             var gss = new NtsGeometryServices();
+
             var css = new SharpMap.CoordinateSystems.CoordinateSystemServices(
                 new CoordinateSystemFactory(),
                 new CoordinateTransformationFactory(),
                 SharpMap.Converters.WellKnownText.SpatialReference.GetAllReferenceSystems());
 
             GeoAPI.GeometryServiceProvider.Instance = gss;
+
             SharpMap.Session.Instance
                 .SetGeometryServices(gss)
                 .SetCoordinateSystemServices(css)

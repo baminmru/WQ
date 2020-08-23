@@ -160,12 +160,14 @@ namespace IntersectionTest
             foreach (FileInfo fi in ldi.GetFiles("*.shp"))
             {
 
-                
-                VectorLayer streets = (VectorLayer)CreateLayer(fi.FullName, new VectorStyle { Line = new Pen(Color.Red), Fill = new SolidBrush(Color.Green) });
-                streets.CoordinateTransformation = ctFact.CreateFromCoordinateSystems(kga, webmercator);
-                streets.ReverseCoordinateTransformation = ctFact.CreateFromCoordinateSystems(webmercator, kga);
-                this.mapBox1.Map.Layers.Add(streets);
-                SaveLayer(fi.Name, streets);
+                var style = new SharpMap.Styles.VectorStyle();
+                style.Fill = new SolidBrush(Color.Green);
+                style.Line = new Pen(Color.Red);
+
+
+                VectorLayer regions = (VectorLayer)CreateLayer(fi.FullName, style);
+                 this.mapBox1.Map.Layers.Add(regions);
+                SaveLayer(fi.Name, regions);
                 
             }
 
@@ -209,7 +211,7 @@ namespace IntersectionTest
 
             for (uint i = 0; i < fc; i++)
             {
-                string s = @"INSERT INTO REGION ([OBJECT_ID] ,[NAME] ,[NO] ,[CODE] ,[LAYER] ,[BBOX] ,[DATA]) VALUES (";
+                string s = @"INSERT INTO REGION ([OBJECT_ID] ,[NAME] ,[CODE] , [TNAS] ,[DATA]) VALUES (";
 
                 string gs = @"INSERT INTO REGIONG ([OBJECT_ID], [NAME]  ,[CODE], [TNAS]  ,[DATA]) VALUES (";
 
@@ -228,7 +230,6 @@ namespace IntersectionTest
                 s = s + ",'" + fdr["NAME"].ToString() + "'";
                 s = s + ",'"  + fdr["CODE"].ToString() + "'";
                 s = s + ",'" + fdr["TNAS_2010"].ToString() + "'";
-                s = s + ",'" + name + "'";
 
                 //gs = gs + fdr["TNAS_2010"].ToString();
 
@@ -250,29 +251,29 @@ namespace IntersectionTest
                 System.Diagnostics.Debug.Print(g.GeometryType + ":");
 
                 CultureInfo ci = new CultureInfo("en-US");
-                string b;
-                b = "'LINESTRING(";
-                string gb;
-                gb = "geography::STGeomFromText('LINESTRING(";
+                string b ="'";
+                //b = "'LINESTRING(";
+                string gb="'";
+                //gb = "geography::STGeomFromText('LINESTRING(";
 
-                bool isFirst = true;
-                GeoPoint pFirst = null;
-                GeoPoint gpt = null;
-                foreach (GeoPoint gp in g.Boundary.Coordinates)
-                {
-                    gpt = gp; //  kga2wgs84.MathTransform.Transform(gp);
-                    if (isFirst)
-                        pFirst = gpt;
-                    if (!isFirst)
-                    {
-                        b += ",";
-                        gb += ",";
-                    }
-                    gb += "(" + gpt.Y.ToString("0.00000000000000000", ci) + " " + gpt.X.ToString("0.00000000000000000", ci) + ")";
-                    b += "(" + gpt.X.ToString("0.000000000000000", ci) + " " + gpt.Y.ToString("0.000000000000000", ci) + ")";
-                    isFirst = false;
+                //bool isFirst = true;
+                //GeoPoint pFirst = null;
+                //GeoPoint gpt = null;
+                //foreach (GeoPoint gp in g.Boundary.Coordinates)
+                //{
+                //    gpt = gp; //  kga2wgs84.MathTransform.Transform(gp);
+                //    if (isFirst)
+                //        pFirst = gpt;
+                //    if (!isFirst)
+                //    {
+                //        b += ",";
+                //        gb += ",";
+                //    }
+                //    gb += "(" + gpt.Y.ToString("0.00000000000000000", ci) + " " + gpt.X.ToString("0.00000000000000000", ci) + ")";
+                //    b += "(" + gpt.X.ToString("0.000000000000000", ci) + " " + gpt.Y.ToString("0.000000000000000", ci) + ")";
+                //    isFirst = false;
 
-                }
+                //}
                 //if(pFirst != null && gpt != null && 
                 //    ( pFirst.Y.ToString("0.00000000000000000", ci) != gpt.Y.ToString("0.00000000000000000", ci) ||
                 //     pFirst.X.ToString("0.00000000000000000", ci) != gpt.X.ToString("0.00000000000000000", ci)
@@ -282,10 +283,12 @@ namespace IntersectionTest
                 //    gb += "(" + pFirst.Y.ToString("0.00000000000000000", ci) + " " + pFirst.X.ToString("0.00000000000000000", ci) + ")";
                 //    b += "(" + pFirst.X.ToString("0.000000000000000", ci) + " " + pFirst.Y.ToString("0.000000000000000", ci) + ")";
                 //}
+                b += g.Boundary.ToString();
+                gb += g.Boundary.ToString();
                 b += ")'";
                 gb += "),4326)'";
                 //gs = gs + "," + gb;
-                s = s + "," + b;
+               // s = s + "," + b;
 
                 if (g.NumGeometries > 1)
                 {
@@ -293,61 +296,62 @@ namespace IntersectionTest
                     {
                         string l;
                         string gl;
-                        l = "'MULTIPOLYGON(";
-                        gl = "geography::STGeomFromText('MULTIPOLYGON(";
+                        l = "N'";
+                        gl = "geography::STGeomFromText(N'";
                         bool isFirstGeometry = true;
                         MultiPolygon mg = (MultiPolygon)g;
-                        foreach (IGeometry g2 in mg.Geometries)
-                        {
+                        //foreach (IGeometry g2 in mg.Geometries)
+                        //{
 
-                            if (!isFirstGeometry)
-                            {
-                                l += " \r\n,";
-                                gl += " \r\n,";
-                            }
-                            isFirstGeometry = false;
+                        //    if (!isFirstGeometry)
+                        //    {
+                        //        l += " \r\n,";
+                        //        gl += " \r\n,";
+                        //    }
+                        //    isFirstGeometry = false;
 
-                            isFirst = true;
-                            pFirst = null;
-                            gpt = null;
-                            l += " ((";
-                            gl += " ((";
-                            foreach (GeoPoint gp in g2.Coordinates)
-                            {
+                        //    isFirst = true;
+                        //    pFirst = null;
+                        //    gpt = null;
+                        //    l += " ((";
+                        //    gl += " ((";
+                        //    foreach (GeoPoint gp in g2.Coordinates)
+                        //    {
 
-                                gpt = gp; // kga2wgs84.MathTransform.Transform(gp);
-                                if (isFirst)
-                                    pFirst = gpt;
-                                if (!isFirst)
-                                {
-                                    l += ",";
-                                    gl += ",";
-                                }
-                                l += gpt.X.ToString("0.000000000000000", ci) + " " + gpt.Y.ToString("0.000000000000000", ci);
-                                gl += gpt.X.ToString("0.000000000000000", ci) + " " + gpt.Y.ToString("0.000000000000000", ci);
-                                isFirst = false;
+                        //        gpt = gp; // kga2wgs84.MathTransform.Transform(gp);
+                        //        if (isFirst)
+                        //            pFirst = gpt;
+                        //        if (!isFirst)
+                        //        {
+                        //            l += ",";
+                        //            gl += ",";
+                        //        }
+                        //        l += gpt.X.ToString("0.000000000000000", ci) + " " + gpt.Y.ToString("0.000000000000000", ci);
+                        //        gl += gpt.X.ToString("0.000000000000000", ci) + " " + gpt.Y.ToString("0.000000000000000", ci);
+                        //        isFirst = false;
 
-                            }
+                        //    }
 
-                            if (pFirst != null && gpt != null &&
-                               (pFirst.Y.ToString("0.00000000000000000", ci) != gpt.Y.ToString("0.00000000000000000", ci) ||
-                                pFirst.X.ToString("0.00000000000000000", ci) != gpt.X.ToString("0.00000000000000000", ci)
-                                )
-                               )
-                            {
-                                System.Diagnostics.Debug.Print(g.ToString());
-                                l += "," + pFirst.Y.ToString("0.00000000000000000", ci) + " " + pFirst.X.ToString("0.00000000000000000", ci) ;
-                                gl += "," + pFirst.X.ToString("0.000000000000000", ci) + " " + pFirst.Y.ToString("0.000000000000000", ci) ;
-                            }
-                            l += ")) ";
-                            gl += ")) ";
-
-
-                        }
+                        //    if (pFirst != null && gpt != null &&
+                        //       (pFirst.Y.ToString("0.00000000000000000", ci) != gpt.Y.ToString("0.00000000000000000", ci) ||
+                        //        pFirst.X.ToString("0.00000000000000000", ci) != gpt.X.ToString("0.00000000000000000", ci)
+                        //        )
+                        //       )
+                        //    {
+                        //        System.Diagnostics.Debug.Print(g.ToString());
+                        //        l += "," + pFirst.Y.ToString("0.00000000000000000", ci) + " " + pFirst.X.ToString("0.00000000000000000", ci) ;
+                        //        gl += "," + pFirst.X.ToString("0.000000000000000", ci) + " " + pFirst.Y.ToString("0.000000000000000", ci) ;
+                        //    }
+                        //    l += ")) ";
+                        //    gl += ")) ";
 
 
-                        l += ")'";
-                        gl += ")',4326)";
+                        //}
+
+                        l += mg.ToString();
+                        gl += mg.Reverse().ToString();
+                        l += "'";
+                        gl += "',4326)";
                         s = s + "," + l;
                         gs = gs + "," + gl;
 
@@ -362,43 +366,50 @@ namespace IntersectionTest
                 {
                     if (g.OgcGeometryType == GeoAPI.Geometries.OgcGeometryType.Polygon)
                     {
+                        Polygon pg = (Polygon)g;
+                       
                         string l;
                         string gl;
-                        l = "'POLYGON((";
-                        gl = "geography::STGeomFromText('POLYGON((";
-                        isFirst = true;
-                        pFirst = null;
-                        gpt = null;
+                        l = "N'";
+                        gl = "geography::STGeomFromText(N'";
+                        //isFirst = true;
+                        //pFirst = null;
+                        //gpt = null;
 
-                        foreach (GeoPoint gp in g.Coordinates)
-                        {
+                        //System.Diagnostics.Debug.Print(g.ToString());
 
-                            gpt = gp; // kga2wgs84.MathTransform.Transform(gp);
-                            if (isFirst)
-                                pFirst = gpt;
-                            if (!isFirst)
-                            {
-                                l += ",";
-                                gl += ",";
-                            }
-                            l += gpt.X.ToString("0.000000000000000", ci) + " " + gpt.Y.ToString("0.000000000000000", ci);
-                            gl += gpt.X.ToString("0.000000000000000", ci) + " " + gpt.Y.ToString("0.000000000000000", ci);
-                            isFirst = false;
+                        //foreach (GeoPoint gp in g.Coordinates)
+                        //{
 
-                        }
+                        //    gpt = gp; // kga2wgs84.MathTransform.Transform(gp);
+                        //    if (isFirst)
+                        //        pFirst = gpt;
+                        //    if (!isFirst)
+                        //    {
+                        //        l += ",";
+                        //        gl += ",";
+                        //    }
+                        //    l += gpt.X.ToString("0.000000000000000", ci) + " " + gpt.Y.ToString("0.000000000000000", ci);
+                        //    gl += gpt.X.ToString("0.000000000000000", ci) + " " + gpt.Y.ToString("0.000000000000000", ci);
+                        //    isFirst = false;
 
-                        if (pFirst != null && gpt != null &&
-                           (pFirst.Y.ToString("0.00000000000000000", ci) != gpt.Y.ToString("0.00000000000000000", ci) ||
-                            pFirst.X.ToString("0.00000000000000000", ci) != gpt.X.ToString("0.00000000000000000", ci)
-                            )
-                           )
-                        {
-                            System.Diagnostics.Debug.Print(g.ToString());
-                            l += " ," + pFirst.Y.ToString("0.00000000000000000", ci) + " " + pFirst.X.ToString("0.00000000000000000", ci) ;
-                            gl += ", " + pFirst.X.ToString("0.000000000000000", ci) + " " + pFirst.Y.ToString("0.000000000000000", ci) ;
-                        }
-                        l += "))'";
-                        gl += "))',4326)";
+                        //}
+
+                        //if (pFirst != null && gpt != null &&
+                        //   (pFirst.Y.ToString("0.00000000000000000", ci) != gpt.Y.ToString("0.00000000000000000", ci) ||
+                        //    pFirst.X.ToString("0.00000000000000000", ci) != gpt.X.ToString("0.00000000000000000", ci)
+                        //    )
+                        //   )
+                        //{
+                        //    System.Diagnostics.Debug.Print(g.ToString());
+                        //    l += " ," + pFirst.Y.ToString("0.00000000000000000", ci) + " " + pFirst.X.ToString("0.00000000000000000", ci) ;
+                        //    gl += ", " + pFirst.X.ToString("0.000000000000000", ci) + " " + pFirst.Y.ToString("0.000000000000000", ci) ;
+                        //}
+                        l += g.ToString();
+                        gl += pg.Reverse().ToString();
+                        l += "'";
+
+                        gl += "',4326)";
                         s = s + "," + l;
                         gs = gs + "," + gl;
 
@@ -446,59 +457,6 @@ namespace IntersectionTest
         }
 
         
-        private void Button1_Click(object sender, EventArgs e)
-        {
-            //System.Collections.Generic.IEnumerable<string> jsons;
-            //var gjr = new NetTopologySuite.IO.GeoJsonReader();
-
-            //var geom = jsons.Select(json => gjr.Read<GeoAPI.Geometries.IGeometry>(json)).ToList();
-
-            //var fp = new SharpMap.Data.Providers.GeometryFeatureProvider(geom);
-            //var l = new SharpMap.Layers.VectorLayer("geojson", fp);
-            //l.CoordinateTransformation = new
-            //    ProjNet.CoordinateSystems.Transformations.CoordinateTransformationFactory().CreateFromCoordinateSystems(
-            //        ProjNet.CoordinateSystems.GeographicCoordinateSystem.WGS84,
-            //        ProjNet.CoordinateSystems.ProjectedCoordinateSystem.WebMercator);
-
-
-            //Random rndGen = new Random();
-            //Collection<IGeometry> geometry = new Collection<IGeometry>();
-
-            //VectorLayer layer = new VectorLayer(String.Empty);
-            //var gf = new GeometryFactory();
-            //switch (rndGen.Next(3))
-            //{
-            //    case 0:
-            //        {
-            //            GeneratePoints(gf, geometry, rndGen);
-            //            KeyValuePair<string, Bitmap> symbolEntry = getSymbolEntry(rndGen.Next(_symbolTable.Count));
-            //            layer.Style.Symbol = symbolEntry.Value;
-            //            layer.LayerName = symbolEntry.Key;
-            //        }
-            //        break;
-            //    case 1:
-            //        {
-            //            GenerateLines(gf, geometry, rndGen);
-            //            KeyValuePair<string, Color> colorEntry = getColorEntry(rndGen.Next(_colorTable.Count));
-            //            layer.Style.Line = new Pen(colorEntry.Value);
-            //            layer.LayerName = String.Format("{0} lines", colorEntry.Key);
-            //        }
-            //        break;
-            //    //case 2:
-            //    //    {
-            //    //        GeneratePolygons(gf, geometry, rndGen);
-            //    //        KeyValuePair<string, Color> colorEntry = getColorEntry(rndGen.Next(_colorTable.Count));
-            //    //        layer.Style.Fill = new SolidBrush(colorEntry.Value);
-            //    //        layer.LayerName = String.Format("{0} squares", colorEntry.Key);
-            //    //    }
-            //    //    break;
-            //    default:
-            //        throw new NotSupportedException();
-            //}
-
-            //var provider = new GeometryProvider(geometry);
-            //layer.DataSource = provider;
-            //this.mapBox1.Map.Layers.Add(layer);
-        }
+     
     }
 }
