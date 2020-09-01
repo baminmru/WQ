@@ -385,7 +385,10 @@ namespace IntersectionTest
                             {
                                 // определили остановку, фиксируем поездку
                                 if (cur.Count > 0)
+                                {
                                     l.Add(cur);
+                                }
+                                    
 
                                 // дальше будет уже следующая
                                 cur = new List<TrackPoint>();
@@ -556,13 +559,27 @@ namespace IntersectionTest
 
                         if(startObj != "" && endObj != "" && startObj != endObj && (tEnd-tStart).TotalMinutes > 5)
                         {
+
+                            String sData = "LINESTRING(";
+                            Boolean isFirst = true;
+                            foreach (TrackPoint tp in rawTrack)
+                            {
+                                if (!isFirst)
+                                    sData += ",";
+                                sData += tp.X.ToString("0.0000000000", ci) + " " + tp.Y.ToString("0.0000000000", ci) +"  NULL " + tp.V.ToString("0.000", ci);
+                                isFirst = false;
+                            }
+
+                            sData += ")";
+
                             matrix.Add(new MatrixItem 
                             {
                                 TrackID= LinkTtrackName,
                                 StartTime = tStart,
                                 EndTime = tEnd,
                                 FromRegion =startObj,
-                                ToRegion = endObj
+                                ToRegion = endObj,
+                                Data = sData
 
                             });
                         }
@@ -599,9 +616,9 @@ namespace IntersectionTest
 
                     foreach (MatrixItem l in records)
                     {
-                        string qry = @"INSERT INTO Matrix([TRACK],[FROMTIME],[TOTIME],[FROMREGION],[TOREGION])VALUES(" +
+                        string qry = @"INSERT INTO Matrix2([TRACK],[FROMTIME],[TOTIME],[FROMREGION],[TOREGION],DATA)VALUES(" +
                         "'" + l.TrackID + "',convert(datetime,'" + l.StartTime.ToString("yyyy-MM-dd HH:mm:ss") + "',121),convert(datetime,'" + l.EndTime.ToString("yyyy-MM-dd HH:mm:ss") + "',121),'" + 
-                        l.FromRegion + "','" + l.ToRegion + "')";
+                        l.FromRegion + "','" + l.ToRegion + "','" +l.Data +"')";
                         cmd.CommandText = qry;
                         try
                         {

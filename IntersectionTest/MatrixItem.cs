@@ -13,5 +13,7 @@ namespace IntersectionTest
         public string ToRegion { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
+
+        public string Data { get; set; }
     }
 }

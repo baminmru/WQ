@@ -66,5 +66,11 @@ namespace IntersectionTest
             frmLoadMatrix fb = new frmLoadMatrix();
             fb.Show();
         }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            frmMatrixBuilder fb = new frmMatrixBuilder();
+            fb.Show();
+        }
     }
 }
